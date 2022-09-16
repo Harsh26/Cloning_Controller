@@ -60,12 +60,19 @@ tau_r(100).
 :-dynamic sigma/1.
 sigma(7).
 
+%Harsh added..
+:-dynamic platform_port/1.
+
+:-dynamic agent_max_resource/2.
+agent_max_resource(100).
+
 %---------------------Declarations End----------------------------------------%
 
 
 start_clonning_controller(EP,DP):-
                                 %enqueue_port(EP),
                                 %dequeue_port(DP),
+
                                 q_manager(EP),
                                 dq_manager(DP),
                                 %thread_create(timer_release,_,[detached(false)]),
@@ -88,7 +95,8 @@ q_manager(P):- write('q_manager failed'),!.
 :- dynamic q_manager_handle/3.
 
 q_manager_handle(guid,(IP,P),recv_agent(X)):-
-                                            writeln('request received for the arrival of agent':X),
+                                            writeln('Request received for the arrival of agent':X),
+                                            writeln('Arrival of agent from Port ':P),
                                              intranode_queue(Li), length(Li,Q_Len),queue_length(Len),
                                              ack_q(ACK_Q),length(ACK_Q,ACK_Len),
                                              L is ACK_Len + Q_Len, 
@@ -106,6 +114,7 @@ q_manager_handle(guid,(IP,P),recv_agent(X)):-
 
                                                                    ack_q(Ack_Q),
                                                                    q_port(QP),
+                                                                   %writeln('Q-Port ':QP),
                                                                    append([X],Ack_Q,Nw_Ack_Q) ,
                                                                    agent_post(platform,(IP,P),[dq_manager_handle,dq_manager,(localhost,QP),ack(X)]),
                                                                    writeln('Space is available in the queue. ACK sent.'),
@@ -195,17 +204,22 @@ update_ack_queue(X):- write('update_ack_queue Failed'),!.
 initiate_migration(GUID):-
                                 clone_if_necessary(GUID),
                                 leaving_queue(GUID,IP,Port),
-                                writeln('Leaving Queue':GUID:IP:Port),
-                                neighbour(NP,NEP),    
-                                catch(agent_move(GUID,(localhost,NP)),Err,writeln(Err)), 
-                                catch(retractall(nak_record(GUID,_)),ERr,write(ERr)), writeln('here'),
-                                %retract(set_to_move(GUID)), writeln('here bro'),
-                                intranode_queue(I), writeln('here too'),
-                                dequeue(GUID,I,Inew), writeln('here too too'),
                                 
-                                update_intranode_queue(Inew),
+                                neighbour(NP,NEP),
 
-                                writeln('initiate_migration Successful!!!'),
+                                writeln('\n'),
+                                writeln('Leaving Queue':GUID:IP:Port),
+                                writeln('To ':NP),
+
+                                %catch(agent_move(GUID,(localhost,NP)),Err,writeln(Err)), 
+                                %catch(retractall(nak_record(GUID,_)),ERr,write(ERr)),
+                                %retract(set_to_move(GUID)), writeln('here bro'),
+                                intranode_queue(I),
+                                %dequeue(GUID,I,Inew),
+                                
+                                %update_intranode_queue(Inew),
+
+                                writeln('initiate_migration Successful!!!, updated intranode queue:':I),
                                 !.
 initiate_migration(GUID):- writeln('initiate_migration Failed'),!.
 
@@ -231,7 +245,7 @@ clone_if_necessary(GUID):- writeln('clone_if_necessary/1 Failed'),!.
 no_of_clone(GUID,N):-
                 cloning_pressure(Ps),
                 agent_resource(GUID,Rc),
-                agent_max_resource(GUID,Rmax),
+                agent_max_resource(Rmax), %(GUID,Rmax),
                 R is Rc/Rmax,
                 N is round(Ps*R),
                 
@@ -297,12 +311,21 @@ create_clones(GUID,N):-
                         platform_port(P),
                         agent_clone(GUID,(localhost,P),Clone_ID),
                         set_clone_parameter(Clone_ID),
-                        retractall(agent_kind(Clone_ID,_)),
-                        assert(agent_kind(Clone_ID,clone)),
-                        retractall(agent_parent(Clone_ID,_)),
-                        assert(agent_parent(Clone_ID,GUID)),
 
-                        platform_port(P),write('executing':Clone_ID:P).
+                        intranode_queue(I),
+                        (member(Clone_ID,I)->
+                        (dequeue(Clone_ID,I,In),enqueue(Clone_ID,In,Inew));
+                        enqueue(Clone_ID,I,Inew)
+                        ),
+                        
+                        update_intranode_queue(Inew),
+
+                        %retractall(agent_kind(Clone_ID,_)),
+                        %assert(agent_kind(Clone_ID,clone)),
+                        %retractall(agent_parent(Clone_ID,_)),
+                        %assert(agent_parent(Clone_ID,GUID)),
+
+                        platform_port(P),write('Executing':Clone_ID:P).
 
 
 create_clones(GUID,N):- writeln('create_clones Failed'),!.
@@ -326,6 +349,14 @@ set_lifetime(GUID,X):-
                 assert(agent_lifetime(GUID,X)).
 
 set_lifetime(GUID,X):- write('set_lifetime Failed'),!.
+
+:-dynamic give_reward/2.
+give_reward(GUID, X):-
+                %writeln('Value of New X ':X),
+                retractall(my_service_reward(GUID,_)),
+                assert(my_service_reward(GUID, X)).
+
+give_reward(GUID, X):- write('Give Rewards Failed!!'), !.
 
 % set_resource/2 sets the resouce of the clone/agent.
 :-dynamic set_resource/2.
@@ -354,8 +385,80 @@ get_sublist(Pos,List,List2):- write('get_sublist Failed'),!.
 
 %%=============================== Q-Manager Utilities ends=======================================
 
+% Harsh added...
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Inserting into own ends%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+:-dynamic moveagent/3.
+moveagent(_,(IP,P), recv_agent(X)):-    			
+	writeln('Agent arrived for insertion to queue ':X),
+        writeln('Agent arrived from ':P),
+
+        intranode_queue(I),
+        (member(X,I)->
+                 (dequeue(X,I,In),enqueue(X,In,Inew));
+                 enqueue(X,I,Inew)
+        ),
+
+        update_intranode_queue(Inew),
+        writeln('Agent added to the queue':Inew),
+
+        update_resource(Agent),
+        !.
+                
+moveagent(_,(IP,P),recv_agent(X)):- writeln('moveagent in cloning controller failed!!'),!.
+
+        
+
+:- dynamic update_resource/1.
+update_resource(GUID):-
+        writeln('here'),
+        agent_resource(GUID, Rav),
+        writeln('Agents original resource ' :Rav),
+        agent_max_resource(Rmax),
+        writeln('Agents Max resource ' :Rmax),
+        cloning_pressure(P),
+        writeln('Agents Cloning Pressure ' :P),
+        tau_c(Tc),
+        writeln('Tau c ' :Tc),
+        tau_r(Tr),
+        writeln('Tau r' :Tr),
+
+        Y is -1/Rav,
+        writeln('Y is ': Y),
+        Z is 1 - 1/P,
+        writeln('Z is ':Z),
+
+        Pow1 is 2.71**Y,
+        writeln('Pow1 is ':Pow1),
+        Pow2 is 2.71**Z,
+        writeln('Pow2 is ' :Pow2),
+
+        Mul11 is Tc * Pow1,
+        writeln('Mul11 is ':Mul11),
+        Mul12 is Tr * 1,   
+        writeln('Mul12 is ':Mul12),
+
+        Mul21 is Tr * 1,
+        writeln('Mul21 is ':Mul21),
+        Mul31 is Tc * Pow2,
+        writeln('Mul31 is ':Mul31),
+        Mul32 is Tr * 1,
+        writeln('Mul32 is ':Mul32),
+
+        %((Rav >= 1) -> ((P < 4) -> writeln('hihi') ; writeln('byby');nothing)),
+
+        (
+            ((Rav >= 3), (P =< 1)) -> (Rn is Rav + Mul11 + Mul12) ;
+            ((Rav < 1), (P < 1)) -> (Rn is Rav + Tc + Mul21) ;
+            ((P > 1)) -> (Rn is Rav +  Mul31 + Mul32)
+        ),
+
+        (Rn > Rmax->Rf is Rmax ; Rf is Rn),
+
+        writeln('Value of new resource ': Rf),
+
+        !.
+
+update_resource(GUID):- writeln('Update resource Failed!!'), !.
 
 
 
@@ -412,7 +515,7 @@ dq_manager(P):- writeln('dq_manager Failed'),!.
 % at the top of the intranode queue onto the next node.
 :- dynamic dq_manager_handle/3.
 % To tranfer an agent to the destination after an ACK is received.
-dq_manager_handle(guid,(IP,P),ack(X)):- writeln('entered'),
+dq_manager_handle(guid,(IP,P),ack(X)):- writeln('Entered'),
                                        (transit_req(X)->
                                        retractall(transit_req(_)),
                                        assert(transit_req(0)),
@@ -440,8 +543,11 @@ dq_manager_handle(guid,(IP,P),nack(X)):-
 
 dq_manager_handle(guid,(IP,P),nack(X)):- writeln('dq_manager_handle NAK Failed'),!.
 
+
+
+
 % To release agent from the intranode queue.
-dq_manager_handle(Name,(IP,P),release(Q)):-
+dq_manager_handle(guid,(IP,P),release(Q)):-
                         intranode_queue(Queue),
                         length(Queue,Len),
                         Len > 0,                % If queue is empty keep checking.
@@ -450,10 +556,28 @@ dq_manager_handle(Name,(IP,P),release(Q)):-
                         agent_list_new(Aglist),writeln('agent list ': Aglist),
                         (member(Agent,Aglist)->
                         writeln('Removing agent from the Queue':Agent),
+                        intranode_queue(Ihere),
+                        writeln('Agents currently in queue ':Ihere),
                         platform_port(PP),neighbour(NP,NEP),
-                        assert(set_to_move(Agent)),
-                        agent_GUID(Agent,Handler,(AIP,AP)),
-                        agent_execute(Agent,(AIP,AP),Handler,move(localhost,P_tomove)),writeln(' SEMWAL!!!');
+                        %assert(set_to_move(Agent)),
+                        %agent_GUID(Agent,Handler,(AIP,AP)),
+                        %agent_execute(Agent,(AIP,AP),Handler,move(localhost,P_tomove)),writeln(' SEMWAL!!!')
+
+                        my_service_reward(Agent, S),
+                        Snew is S+1,
+                        writeln('New Reward is ':Snew),
+                        give_reward(Agent, Snew),
+                        
+                        move_agent(Agent,(localhost,NP)),
+                        post_agent(platform,(localhost,NP),[moveagent,_,(localhost,PP), recv_agent(Agent)]),
+
+                        dequeue(Agent,Ihere,In),
+                        update_intranode_queue(In),
+                        writeln('Bye'),
+                        intranode_queue(Ifinal),
+                        writeln('Agents currently in queue ':Ifinal)
+                        ;
+
                         agent_execute(Agent,(AIP,AP),Handler),
                         writeln('QUEUE PROBLEM RA.'),delete(Aglist,q_manager,Aglist1),
                         delete(Aglist1,dq_manager,Aglist2),
@@ -487,8 +611,16 @@ leave_queue(Agent,IP,Port):- writeln('leave_queue Failed'),!.
 % to start its migration procedure.
 :- dynamic release_agent/0.
 release_agent:-
+                        writeln('Release Agent called...'),
+                        
+
                         dq_port(DP), 
-                        leave_queue(agent1, localhost, NP),
+
+                        write('on ':DP),
+                        writeln('\n'),
+                        
+                        %writeln('Leave Queue called on.. ':NP),
+                        %leave_queue(agent1, localhost, NP),
 
                         agent_post(platform,(localhost,DP),[dq_manager_handle,dq_manager,(_,_),release(agent1)]).
 
