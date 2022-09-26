@@ -75,7 +75,7 @@ start_clonning_controller(EP,DP):-
 
                                 q_manager(EP),
                                 dq_manager(DP),
-                                %thread_create(timer_release,_,[detached(false)]),
+                                thread_create(timer_release,_,[detached(false)]),
 
                                 !.
 
@@ -172,6 +172,7 @@ migrate_typhlet(GUID):-
                 writeln('ACK Q is ':ACK_Q),
 
                 %writeln('Going to Call Leave Queue..'),
+                
                 !.
 
 migrate_typhlet(GUID):- writeln('Migrate Typhlet in Q-Manager Failed for':GUID),!.
@@ -402,47 +403,61 @@ moveagent(_,(IP,P), recv_agent(X)):-
         writeln('Agent added to the queue':Inew),
 
         update_resource(Agent),
+        update_lifetime(Agent),
         !.
                 
 moveagent(_,(IP,P),recv_agent(X)):- writeln('moveagent in cloning controller failed!!'),!.
+
+:- dynamic update_lifetime/1.
+update_lifetime(GUID):-
+        sigma(S),
+        agent_lifetime(GUID, O),
+        N is O + S * 1,
+        retractall(agent_lifetime(GUID, _)),
+        assert(agent_lifetime(GUID, N)),
+        agent_lifetime(GUID, X),
+        writeln('Updated lifetime':X),
+        !.
+
+update_lifetime(GUID):- writeln('Update lifetime failed!!'),!.
 
         
 
 :- dynamic update_resource/1.
 update_resource(GUID):-
-        writeln('here'),
+        %writeln('here'),
         agent_resource(GUID, Rav),
-        writeln('Agents original resource ' :Rav),
+        %writeln('Agents original resource ' :Rav),
         agent_max_resource(Rmax),
-        writeln('Agents Max resource ' :Rmax),
+        %writeln('Agents Max resource ' :Rmax),
         cloning_pressure(P),
-        writeln('Agents Cloning Pressure ' :P),
+        %writeln('Agents Cloning Pressure ' :P),
         tau_c(Tc),
-        writeln('Tau c ' :Tc),
+        %writeln('Tau c ' :Tc),
         tau_r(Tr),
-        writeln('Tau r' :Tr),
+        %writeln('Tau r' :Tr),
 
         Y is -1/Rav,
-        writeln('Y is ': Y),
+        %writeln('Y is ': Y),
         Z is 1 - 1/P,
-        writeln('Z is ':Z),
+        %writeln('Z is ':Z),
 
         Pow1 is 2.71**Y,
-        writeln('Pow1 is ':Pow1),
+        %writeln('Pow1 is ':Pow1),
         Pow2 is 2.71**Z,
-        writeln('Pow2 is ' :Pow2),
+        %writeln('Pow2 is ' :Pow2),
 
         Mul11 is Tc * Pow1,
-        writeln('Mul11 is ':Mul11),
+        %writeln('Mul11 is ':Mul11),
         Mul12 is Tr * 1,   
-        writeln('Mul12 is ':Mul12),
+        %writeln('Mul12 is ':Mul12),
 
         Mul21 is Tr * 1,
-        writeln('Mul21 is ':Mul21),
+        %writeln('Mul21 is ':Mul21),
         Mul31 is Tc * Pow2,
-        writeln('Mul31 is ':Mul31),
+        %writeln('Mul31 is ':Mul31),
         Mul32 is Tr * 1,
-        writeln('Mul32 is ':Mul32),
+        %writeln('Mul32 is ':Mul32),
 
         %((Rav >= 1) -> ((P < 4) -> writeln('hihi') ; writeln('byby');nothing)),
 
@@ -454,8 +469,9 @@ update_resource(GUID):-
 
         (Rn > Rmax->Rf is Rmax ; Rf is Rn),
 
-        writeln('Value of new resource ': Rf),
-
+        set_resource(GUID, Rf),
+        agent_resource(GUID, X),
+        writeln('Value of new resource ': X),
         !.
 
 update_resource(GUID):- writeln('Update resource Failed!!'), !.
@@ -575,7 +591,9 @@ dq_manager_handle(guid,(IP,P),release(Q)):-
                         update_intranode_queue(In),
                         writeln('Bye'),
                         intranode_queue(Ifinal),
-                        writeln('Agents currently in queue ':Ifinal)
+                        writeln('Agents currently in queue ':Ifinal),
+                        writeln('Printing decremented lifetimes...')
+        
                         ;
 
                         agent_execute(Agent,(AIP,AP),Handler),
@@ -641,13 +659,63 @@ set_transfer(Agent,IP,Port):-
 
 set_transfer(Agent,IP,Port):- writeln('set_transfer Failed'),!.
 
+:-dynamic show_lf/1.
+
+show_lf([]).
+
+show_lf([H|T]):-
+        %process(H),
+
+        agent_lifetime(H, L),
+        write('Agent ':H),
+        write(' has lifetime' :L),
+        writeln('\n'),
+
+        show_lf(T).
+
+showlifetime:-
+        intranode_queue(I),
+        show_lf(I),
+
+        !.
+
+showlifetime:- writeln('showlifetime/0 failed due to some reason'),!.
+
+:-dynamic do_decr/1.
+
+do_decr([]).
+
+do_decr([H|T]):-
+        %process(H),
+        intranode_queue(I),
+        agent_lifetime(H, O),
+        N is O - 1,
+
+        ((N =< 0)-> (purge_agent(H), dequeue(H,I,In), update_intranode_queue(In), writeln('Agent removed from the queue, updated one ':In)) 
+          ; %(retractall(agent_lifetime(H, _)),assert(agent_lifetime(H, 0))) ;
+         (retractall(agent_lifetime(H, _)),assert(agent_lifetime(H, N)))),
+
+        do_decr(T).
+
+:- dynamic decrement_lifetime/0.
+
+decrement_lifetime:-
+        intranode_queue(I),
+        do_decr(I),
+
+        !.
+
+decrement_lifetime:- writeln('decrement_lifetime/0 failed due to some reason'),!.
 
 
 :-dynamic timer_release/0.
 
 timer_release:-
-               sleep(0.5),release_agent,
+               sleep(5),%release_agent,
+               decrement_lifetime,
+               showlifetime,
                timer_release,
+
                !.
 
 
