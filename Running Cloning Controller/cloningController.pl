@@ -129,7 +129,6 @@ q_manager_handle(guid,(IP,P),recv_agent(X)):-
                                               intranode_queue(Lii),length(Lii,Lh),queue_length(Lenn),
                                               agent_post(platform,(IP,P),[dq_manager_handle,dq_manager,(localhost,QP),nack(X)]),
                                               writeln('No space is available in queue. NAK sent...')
-
                                               )
                                               ),
                 !.
@@ -203,7 +202,7 @@ update_ack_queue(X):- write('update_ack_queue Failed'),!.
 
 :- dynamic initiate_migration/1.
 initiate_migration(GUID):-
-                                clone_if_necessary(GUID),
+                                
                                 leaving_queue(GUID,IP,Port),
                                 
                                 neighbour(NP,NEP),
@@ -537,7 +536,9 @@ dq_manager_handle(guid,(IP,P),ack(X)):- writeln('Entered'),
                                        assert(transit_req(0)),
                                        writeln('ACK by the receiver':P:X),
                                        initiate_migration(X);nothing),
-                                       release_agent,
+                                       dq_port(DP),
+                                       agent_post(platform,(localhost,DP),[dq_manager_handle,dq_manager,(_,_),release(X)]),
+                                       %release_agent,
 
                 !.
 
@@ -612,7 +613,7 @@ dq_manager_handle(guid,(IP,P),release(Q)):- writeln('DQ Mananger release() Faile
 %leave_queue/3 contacts the destination of the agent whether it can move there or not.
 :- dynamic leave_queue/3.
 leave_queue(Agent,NIP,NPort):-      %NIP - neighbour IP
-
+                
                 platform_port(From_P),
                 neighbour(NP,NEP),
                 dq_port(DP),
@@ -627,22 +628,49 @@ leave_queue(Agent,IP,Port):- writeln('leave_queue Failed'),!.
 
 % release_agent/0 selects the agent at the top of the Queue and posts the move() handler
 % to start its migration procedure.
+
+%:-dynamic do_release/1.
+
+%do_release([[]]):-
+%        decrement_lifetime,
+%        showlifetime.
+
+
+%do_release([H|T]):-
+        
+        
+%       do_release([T]),
+%        !.
+
+:-dynamic my_length/2.
+
+my_length([[]], 0).
+my_length([A | B], N):-
+        my_length(B, N1),
+        N is N1 + 1.
+
 :- dynamic release_agent/0.
 release_agent:-
                         writeln('Release Agent called...'),
-                        
+                        node_neighbours(X),
 
-                        dq_port(DP), 
+                        %do_release(X),
 
-                        write('on ':DP),
-                        writeln('\n'),
+                        my_length(X,L),
+                        %writeln('Length of list of list ':L),
+
+                        (L > 0)->(node_neighbours([H | T]), decrement_lifetime, showlifetime, nth0(0, H, Elem), nth0(1, H, Elem1), writeln('Elem ':Elem), writeln('Elem1':Elem1), NP is Elem, NEP is Elem1, retractall(neighbour(_,_)), assert(neighbour(NP, NEP)), intranode_queue(I), length(I,Len), (Len > 0)->(intranode_queue([Agent|Tail]), clone_if_necessary(Agent), leave_queue(Agent, localhost, NP), retractall(node_neighbours(_)), assert(node_neighbours([T])));(nothing));(intranode_queue(I), length(I,Len), (Len > 0)->(intranode_queue([Agent|Tail]),clone_if_necessary(Agent), decrement_lifetime, showlifetime);(decrement_lifetime, showlifetime)),
+
+                        !.
+                        %dq_port(DP), 
+
+                        %write('on ':DP),
+                        %writeln('\n'),
                         
                         %writeln('Leave Queue called on.. ':NP),
                         %leave_queue(agent1, localhost, NP),
 
-                        agent_post(platform,(localhost,DP),[dq_manager_handle,dq_manager,(_,_),release(agent1)]).
-
-release_agent:- writeln('release_agent/0 failed due to some reason'),!.
+                        %agent_post(platform,(localhost,DP),[dq_manager_handle,dq_manager,(_,_),release(agent1)]).
 
 
 %%=============================== DQ-Manager ends==============================================
@@ -671,7 +699,9 @@ show_lf([H|T]):-
         write(' has lifetime' :L),
         writeln('\n'),
 
-        show_lf(T).
+        show_lf(T),
+        
+        !.
 
 showlifetime:-
         intranode_queue(I),
@@ -679,7 +709,7 @@ showlifetime:-
 
         !.
 
-showlifetime:- writeln('showlifetime/0 failed due to some reason'),!.
+showlifetime:- !.
 
 :-dynamic do_decr/1.
 
@@ -695,7 +725,8 @@ do_decr([H|T]):-
           ; %(retractall(agent_lifetime(H, _)),assert(agent_lifetime(H, 0))) ;
          (retractall(agent_lifetime(H, _)),assert(agent_lifetime(H, N)))),
 
-        do_decr(T).
+        do_decr(T),
+        !.
 
 :- dynamic decrement_lifetime/0.
 
@@ -705,17 +736,15 @@ decrement_lifetime:-
 
         !.
 
-decrement_lifetime:- writeln('decrement_lifetime/0 failed due to some reason'),!.
+decrement_lifetime:- !.
 
 
 :-dynamic timer_release/0.
 
 timer_release:-
-               sleep(5),%release_agent,
-               decrement_lifetime,
-               showlifetime,
-               timer_release,
+        sleep(5),release_agent,
+        timer_release,
 
-               !.
+        !.
 
 
