@@ -2,32 +2,31 @@
 :-dynamic neighbour/2.
 :-dynamic agent_resource/2.
 :-dynamic agent_max_resource/2.
-:-dynamic handler2/3.
+:-dynamic handler3/3.
 :-dynamic platform_port/1.
 :-dynamic node_neighbours/1.
 
 starttar:-
    consult("platform.pl"),
-   start_tartarus(localhost,15000,30).
+   start_tartarus(localhost,15003,30).
 
 attachneighbour:-
    retractall(node_neighbours(_)),
-   assert(node_neighbours([[15001, 15101],[15002, 15102],[]])).
+   assert(node_neighbours([[15002, 15102],[15001, 15101],[]])).
 
 
 startcontroller:-
    consult("cloningController.pl"),
    %consult("cloningOriginal.pl"),
-   start_clonning_controller(15100,15200),
-   create_mobile_agent(agent1,(localhost,15000),handler1,[30,32]),
-   %create_mobile_agent(agent2,(localhost,15000),handler2,[30,32]),
+   start_clonning_controller(15103,15203),
+   create_mobile_agent(agent3,(localhost,15003),handler3,[30,32]),
    retractall(agent_resource(_,_)), assert(agent_resource(guid,100)), retractall(agent_lifetime(_,_)), assert(agent_lifetime(guid, 10)), retractall(my_service_reward(_,_)), assert(my_service_reward(guid, 0)),
-   add_payload(agent1,[(agent_resource,2), (agent_lifetime, 2), (my_service_reward, 2)]),
+   add_payload(agent3, [(agent_resource,2), (agent_lifetime, 2), (my_service_reward, 2)]),
    %add_payload(agent2,[(agent_resource,2)]),
    %leave_queue(agent1,localhost,15001).
    %q_manager_handle(guid, (localhost, 15000), agent1),
-   platform_port(15000),
-   migrate_typhlet(agent1). %migrate_typhlet(agent2).
+   platform_port(15003),
+   migrate_typhlet(agent3).
 
 %attachneighbour:-   
 %   assert(neighbour(15001,15101)).
@@ -50,8 +49,8 @@ startcontroller:-
 
 
 
-handler1(guid,(_,_),main):-
-    writeln('hi'),
+handler3(guid,(_,_),main):-
+    writeln('Bonjour'),
     agent_lifetime(guid, A),
     writeln('My lifetime is ':A),
     my_service_reward(guid, B),

@@ -8,10 +8,12 @@
 
 starttar:-
     consult("platform.pl"),
-    start_tartarus(localhost,15001,30),
-    assert(node_neighbours([[]])).
+    start_tartarus(localhost,15001,30).
 
-startcloningcontroller:-
+attachneighbour:-
+    assert(node_neighbours([[15003, 15103],[]])).
+
+startcontroller:-
     consult("cloningController.pl"),
    %consult("cloningOriginal.pl"),
    start_clonning_controller(15101,15201),

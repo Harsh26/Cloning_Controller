@@ -659,7 +659,7 @@ release_agent:-
                         my_length(X,L),
                         %writeln('Length of list of list ':L),
 
-                        (L > 0)->(node_neighbours([H | T]), decrement_lifetime, showlifetime, nth0(0, H, Elem), nth0(1, H, Elem1), writeln('Elem ':Elem), writeln('Elem1':Elem1), NP is Elem, NEP is Elem1, retractall(neighbour(_,_)), assert(neighbour(NP, NEP)), intranode_queue(I), length(I,Len), (Len > 0)->(intranode_queue([Agent|Tail]), clone_if_necessary(Agent), leave_queue(Agent, localhost, NP), retractall(node_neighbours(_)), assert(node_neighbours([T])));(nothing));(intranode_queue(I), length(I,Len), (Len > 0)->(intranode_queue([Agent|Tail]),clone_if_necessary(Agent), decrement_lifetime, showlifetime);(decrement_lifetime, showlifetime)),
+                        (L > 0)->(node_neighbours([H | T]), decrement_lifetime, showlifetime, nth0(0, H, Elem), nth0(1, H, Elem1), NP is Elem, NEP is Elem1, retractall(neighbour(_,_)), assert(neighbour(NP, NEP)), intranode_queue(I), length(I,Len), (Len > 0)->(intranode_queue([Agent|Tail]), clone_if_necessary(Agent), leave_queue(Agent, localhost, NP), retractall(node_neighbours(_)), assert(node_neighbours([T])));(nothing));(intranode_queue(I), length(I,Len), (Len > 0)->(intranode_queue([Agent|Tail]),clone_if_necessary(Agent), decrement_lifetime, showlifetime);(decrement_lifetime, showlifetime)),
 
                         !.
                         %dq_port(DP), 
@@ -742,7 +742,7 @@ decrement_lifetime:- !.
 :-dynamic timer_release/0.
 
 timer_release:-
-        sleep(5),release_agent,
+        sleep(10),release_agent,
         timer_release,
 
         !.
