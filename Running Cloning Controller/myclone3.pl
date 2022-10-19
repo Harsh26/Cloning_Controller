@@ -5,6 +5,8 @@
 :-dynamic handler3/3.
 :-dynamic platform_port/1.
 :-dynamic node_neighbours/1.
+:-dynamic agent_lifetime/2.
+:-dynamic my_service_reward/2.
 
 starttar:-
    consult("platform.pl"),
@@ -12,7 +14,7 @@ starttar:-
 
 attachneighbour:-
    retractall(node_neighbours(_)),
-   assert(node_neighbours([[15002, 15102],[15001, 15101],[]])).
+   assert(node_neighbours([[15002, 15102],[15001, 15101]])).
 
 
 startcontroller:-

@@ -13,7 +13,9 @@
 :-dynamic set_to_move/1.
 :-dynamic q_port/1.
 :-dynamic dq_port/1.
-
+:-dynamic agent_lifetime/2.
+:-dynamic my_service_reward/2.
+:-dynamic agent_resource/2.
 
 :-dynamic intranode_queue/1.
 intranode_queue([]).
@@ -228,14 +230,7 @@ initiate_migration(GUID):- writeln('initiate_migration Failed'),!.
 :-dynamic clone_if_necessary/1.
 clone_if_necessary(GUID):-
               no_of_clone(GUID,N), %writeln(N),
-                (
-                        (N = 0)->writeln('No Clones will be created':GUID);
-
-                                (
-                                   writeln('Creating Clones':N),
-                                   deduct_clonal_resource(GUID,N)
-                                )
-                ),
+                ( (N = 0)->(writeln('No Clones will be created':GUID));(writeln('Creating Clones':N), deduct_clonal_resource(GUID,N))),
                 !.
 
 clone_if_necessary(GUID):- writeln('clone_if_necessary/1 Failed'),!.
@@ -244,9 +239,15 @@ clone_if_necessary(GUID):- writeln('clone_if_necessary/1 Failed'),!.
 :-dynamic no_of_clone/2.
 no_of_clone(GUID,N):-
                 cloning_pressure(Ps),
+                writeln('chk failure 8'),
+                writeln('Guid came ': GUID),
                 agent_resource(GUID,Rc),
+                writeln('Guid gone ': GUID),
+                writeln('Rc ': Rc),
                 agent_max_resource(Rmax), %(GUID,Rmax),
+                writeln('chk failure 9'),
                 R is Rc/Rmax,
+                writeln('chk failure 10'),
                 N is round(Ps*R),
                 
                 %writeln(N),
@@ -260,15 +261,15 @@ cloning_pressure(Ps):-
                 queue_threshold(Qth),
                 intranode_queue(I),
 
-                %writeln('Inside Cloning Pressure':I),
+                writeln('Inside Cloning Pressure':I),
                 length(I,Qn),
-                %writeln('Length of queue':Qn),
-                %writeln('Queue threshold':Qth),
+                writeln('Length of queue':Qn),
+                writeln('Queue threshold':Qth),
 
                 P is Qth - Qn,
-                ((P > 0)->
-                        Ps = P; Ps = 0
-                ).
+                ((P > 0)->(Ps is P);(Ps is 0)),
+                
+                !.
 
 cloning_pressure(Ps):- writeln('cloning_pressure Failed'),!.
 
@@ -325,7 +326,7 @@ create_clones(GUID,N):-
                         %retractall(agent_parent(Clone_ID,_)),
                         %assert(agent_parent(Clone_ID,GUID)),
 
-                        platform_port(P),write('Executing':Clone_ID:P).
+                        platform_port(P),write('Executing':Clone_ID:P), !.
 
 
 create_clones(GUID,N):- writeln('create_clones Failed'),!.
@@ -335,20 +336,29 @@ create_clones(GUID,N):- writeln('create_clones Failed'),!.
 set_clone_parameter(GUID):-
                 clone_lifetime(L),
                 clone_resource(R),
-                set_lifetime(GUID,L),
-                set_resource(GUID,R).
+                service_reward(S),
+                %set_lifetime(GUID,L),
+                %set_resource(GUID,R),
+                %set_reward(GUID, S),
+                
+                retractall(agent_lifetime(GUID,_)),
+                assert(agent_lifetime(GUID,L)),
+                retractall(agent_resource(GUID,_)),
+                assert(agent_resource(GUID,R)),
+                retractall(my_service_reward(GUID,_)),
+                assert(my_service_reward(GUID, S)).
+
+                %add_payload(GUID, [(agent_resource,2), (agent_lifetime, 2), (my_service_reward, 2)]).
 
 set_clone_parameter(GUID):- write('set_clone_parameter Failed'),!.
 
 % set_lifettime/2 sets the lifetimes of the clone/agent.
-:-dynamic set_lifetime/2.
-set_lifetime(GUID,X):-
+%:-dynamic set_lifetime/2.
+%set_lifetime(GUID,X):-
 
                 %send_log(D),
-                retractall(agent_lifetime(GUID,_)),
-                assert(agent_lifetime(GUID,X)).
-
-set_lifetime(GUID,X):- write('set_lifetime Failed'),!.
+                
+%set_lifetime(GUID,X):- write('set_lifetime Failed'),!.
 
 :-dynamic give_reward/2.
 give_reward(GUID, X):-
@@ -358,12 +368,19 @@ give_reward(GUID, X):-
 
 give_reward(GUID, X):- write('Give Rewards Failed!!'), !.
 
+%:-dynamic set_reward/2.
+%set_reward(GUID,X):-
+
+                %send_log(D),
+                %retractall(my_service_reward(GUID,_)),
+                %assert(my_service_reward(GUID,X)).
+
 % set_resource/2 sets the resouce of the clone/agent.
 :-dynamic set_resource/2.
 set_resource(GUID,X):-
-
                 retractall(agent_resource(GUID,_)),
                 assert(agent_resource(GUID,X)).
+                
 
 set_resource(GUID,X):- write('set_resource Failed'),!.
 
@@ -401,8 +418,8 @@ moveagent(_,(IP,P), recv_agent(X)):-
         update_intranode_queue(Inew),
         writeln('Agent added to the queue':Inew),
 
-        update_resource(Agent),
-        update_lifetime(Agent),
+        update_resource(X),
+        update_lifetime(X),
         !.
                 
 moveagent(_,(IP,P),recv_agent(X)):- writeln('moveagent in cloning controller failed!!'),!.
@@ -438,7 +455,9 @@ update_resource(GUID):-
 
         Y is -1/Rav,
         %writeln('Y is ': Y),
-        Z is 1 - 1/P,
+        
+        ((P = 0)->(Z is 1 - 1/0.1);(Z is 1 - 1/P)),
+        
         %writeln('Z is ':Z),
 
         Pow1 is 2.71**Y,
@@ -552,9 +571,12 @@ dq_manager_handle(guid,(IP,P),nack(X)):-
                                        assert(transit_req(0)),
                 writeln('=Migration Denied (NAK) by the receiver'),
 
-                 migrate_typhlet(X);nothing),
+                agent_list_new(Aglist),
 
-
+                (member(X, Aglist)->(migrate_typhlet(X));(nothing))
+                ;
+                (nothing)
+                ),
 
                 !.
 
@@ -568,9 +590,10 @@ dq_manager_handle(guid,(IP,P),release(Q)):-
                         intranode_queue(Queue),
                         length(Queue,Len),
                         Len > 0,                % If queue is empty keep checking.
-                        writeln('Releasing agent'),
                         intranode_queue([Agent|Tail]),  % select the agent at the top of the queue
-                        agent_list_new(Aglist),writeln('agent list ': Aglist),
+                        writeln('Releasing agent ':Agent),
+                        %agent_list_new(Aglist),writeln('agent list ': Aglist),
+                        writeln('Agent list ': Queue),
                         (member(Agent,Aglist)->
                         writeln('Removing agent from the Queue':Agent),
                         intranode_queue(Ihere),
@@ -642,12 +665,12 @@ leave_queue(Agent,IP,Port):- writeln('leave_queue Failed'),!.
 %       do_release([T]),
 %        !.
 
-:-dynamic my_length/2.
+%:-dynamic my_length/2.
 
-my_length([[]], 0).
-my_length([A | B], N):-
-        my_length(B, N1),
-        N is N1 + 1.
+%my_length([], 0).
+%my_length([A | B], N):-
+%        my_length(B, N1),
+%        N is N1 + 1.
 
 :- dynamic release_agent/0.
 release_agent:-
@@ -656,12 +679,29 @@ release_agent:-
 
                         %do_release(X),
 
-                        my_length(X,L),
+                        %my_length(X,L),
                         %writeln('Length of list of list ':L),
+                        length(X, L),
 
-                        (L > 0)->(node_neighbours([H | T]), decrement_lifetime, showlifetime, nth0(0, H, Elem), nth0(1, H, Elem1), NP is Elem, NEP is Elem1, retractall(neighbour(_,_)), assert(neighbour(NP, NEP)), intranode_queue(I), length(I,Len), (Len > 0)->(intranode_queue([Agent|Tail]), clone_if_necessary(Agent), leave_queue(Agent, localhost, NP), retractall(node_neighbours(_)), assert(node_neighbours([T])));(nothing));(intranode_queue(I), length(I,Len), (Len > 0)->(intranode_queue([Agent|Tail]),clone_if_necessary(Agent), decrement_lifetime, showlifetime);(decrement_lifetime, showlifetime)),
+                        writeln('chk failure 1'),
+
+                        ((L > 0)->(node_neighbours([H | T]), nth0(0, H, Elem), nth0(1, H, Elem1), writeln('Elem ':Elem), writeln('Elem1':Elem1), NP is Elem, NEP is Elem1, writeln('chk failure 2'),
+                                
+                                retractall(neighbour(_,_)), assert(neighbour(NP, NEP)), writeln('chk failure 3'),
+                                intranode_queue(I), length(I,Len), writeln('chk failure 4'),
+                                
+                                ((Len > 0)->(intranode_queue([Agent|Tail]), writeln('Length test ':Len), writeln('Agent test ':Agent), clone_if_necessary(Agent), sleep(3), writeln('chk failure 11'),decrement_lifetime, sleep(3), writeln('chk failure 12'),showlifetime, writeln('chk failure 13'), leave_queue(Agent, localhost, NP), writeln('chk failure 14'),enqueue(H, T, Tn), writeln('chk failure 5'),retractall(node_neighbours(_)), assert(node_neighbours(Tn)));(sleep(3), decrement_lifetime, sleep(3), showlifetime)))
+                                
+                                ;
+
+                                (intranode_queue(I), length(I,Len), writeln('chk failure 6'),
+                                (Len > 0)->(intranode_queue([Agent|Tail]), writeln('Length test ':Len), writeln('Agent test ':Agent), clone_if_necessary(Agent), sleep(3), writeln('chk failure 7'), decrement_lifetime, showlifetime)
+                                ;(decrement_lifetime, showlifetime))),
 
                         !.
+release_agent:-
+                writeln('Release Agent Failed !'),!.
+
                         %dq_port(DP), 
 
                         %write('on ':DP),
@@ -671,6 +711,7 @@ release_agent:-
                         %leave_queue(agent1, localhost, NP),
 
                         %agent_post(platform,(localhost,DP),[dq_manager_handle,dq_manager,(_,_),release(agent1)]).
+
 
 
 %%=============================== DQ-Manager ends==============================================
@@ -709,34 +750,94 @@ showlifetime:-
 
         !.
 
-showlifetime:- !.
+:-dynamic tmp_q/1.
+tmp_q([]).
+
+:-dynamic del_zero_lifetime/1.
+
+del_zero_lifetime([]).
+
+del_zero_lifetime([H|T]):-
+        agent_lifetime(H, L),
+        tmp_q(Q),
+        ((L =< 0)->(writeln('Agent Purged ':H), purge_agent(H));(enqueue(H, Q, Qn), retractall(tmp_q(_)), assert(tmp_q(Qn)))),
+        del_zero_lifetime(T),
+        !.
 
 :-dynamic do_decr/1.
 
 do_decr([]).
 
 do_decr([H|T]):-
-        %process(H),
-        intranode_queue(I),
+        writeln('do_decr_start'),
+        writeln('H ':H),
+
         agent_lifetime(H, O),
+        writeln('O ': O),
         N is O - 1,
-
-        ((N =< 0)-> (purge_agent(H), dequeue(H,I,In), update_intranode_queue(In), writeln('Agent removed from the queue, updated one ':In)) 
-          ; %(retractall(agent_lifetime(H, _)),assert(agent_lifetime(H, 0))) ;
-         (retractall(agent_lifetime(H, _)),assert(agent_lifetime(H, N)))),
-
+        writeln('do_decr mid'),
+        retractall(agent_lifetime(H, _)),assert(agent_lifetime(H, N)),
+        writeln('do_decr end'),
         do_decr(T),
+        
         !.
+
+        %((N =< 0)-> (dequeue(H,I,In), purge_agent(H), update_intranode_queue(In), writeln('Agent removed from the queue, updated one ':In), do_decr(In)) 
+        %  ; (retractall(agent_lifetime(H, _)),assert(agent_lifetime(H, N)), do_decr(T) )),%dequeue(H,I,In), enqueue(H, In, Inn), update_intranode_queue(Inn), do_decr(Inn))),
+        %(retractall(agent_lifetime(H, _)),assert(agent_lifetime(H, N)), dequeue(H,I,In), enqueue(H, In, Inn), update_intranode_queue(Inn) )),
+         
+
+:-dynamic member_check/1.
+
+member_check([]).
+
+member_check([H|T]):-
+        agent_list_new(Aglist),
+        (member(H, Aglist)->    (
+                                        tmp_q(Q),
+                                        enqueue(H, Q, Qn), 
+                                        retractall(tmp_q(_)),
+                                        assert(tmp_q(Qn)),
+                                        member_check(T)
+                                )
+                                ;
+                                (
+                                        member_check(T)
+                                )
+        ),
+
+        !.
+        
+        
 
 :- dynamic decrement_lifetime/0.
 
 decrement_lifetime:-
         intranode_queue(I),
+        agent_list_new(Aglist),
+        writeln('Aglist ': Aglist),
+        member_check(I),
+        tmp_q(Q),
+        writeln('Q here ' :Q),
+        update_intranode_queue(Q),
+        retractall(tmp_q(_)),
+        assert(tmp_q([])),
+        sleep(3),
+        writeln('Decrement lifetime of ': I),
         do_decr(I),
+        intranode_queue(Ii),
+        writeln('Decrement cycle Done ! now lifetimes ':Ii),
 
+        del_zero_lifetime(Ii),
+        writeln('Ii here ' :Ii),
+        tmp_q(R),
+        writeln('Q here ' :R),
+        update_intranode_queue(R),
+        intranode_queue(Iii),
+        writeln('New Iii here ' :Iii),
+        retractall(tmp_q(_)),
+        assert(tmp_q([])),
         !.
-
-decrement_lifetime:- !.
 
 
 :-dynamic timer_release/0.
