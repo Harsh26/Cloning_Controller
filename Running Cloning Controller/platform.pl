@@ -1178,11 +1178,23 @@ agent_clone(GUID1,(Send_Ip,Send_Port),GUID2):-
         retractall(get_destination_port(_)), assert(get_destination_port(Send_Port)),
         %((atom(GUID1),integer(Send_Port),var(GUID2))->nothing;abort),
         gensym(GUID1,GUID2),
+        %number_string(Send_Port, P),
+        %atom_concat(P, GUID2, NGUID2),
+        %writeln('Tartarus check ':NGUID2),
+        %atom(GUID2),
+
+        %b_setval(NGUID2, Myvar),
+        %b_getval(Myvar, GUID2),
+
+        %writeln('Tartarus check ':GUID2),
         get_time(TT),                                                                                                                           %%time in seconds from begining of os
         assert(outgoing_agent(GUID2,TT,_)),
         assimilate_code(GUID1,AgentCode),
+        %writeln('here2'),
         replaceGUID(AgentCode,GUID1,GUID2,CloneCode),
+        %writeln('here3'),
         agent_payload(GUID1,PayloadList),
+        %writeln('here'),
         agent_GUID(GUID1,Handler,_),
         agent_token(GUID1,ListOfTokens),
         list_to_set(ListOfTokens,ListOfTokens2),
