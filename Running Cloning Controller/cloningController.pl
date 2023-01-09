@@ -105,7 +105,7 @@ q_manager_handle(guid,(IP,P),recv_agent(X)):-
                                              writeln('Arrival of agent from Port ':P),
                                              intranode_queue(Li), length(Li,Q_Len),queue_length(Len),
                                              ack_q(ACK_Q),length(ACK_Q,ACK_Len),
-                                             L is ACK_Len + Q_Len, 
+                                             L is Q_Len, 
                                              writeln(Len), writeln(Q_Len), writeln(ACK_Len), writeln(L),
                                              ((L<Len)->
                                              (
@@ -114,7 +114,6 @@ q_manager_handle(guid,(IP,P),recv_agent(X)):-
                                                          (member([X,_],Ack_QQ))->
                                                                  (
                                                                    nothing,writeln('Request ignored for receive.. already sent ealier.')
-
                                                                  );
                                                                  (
 
@@ -126,15 +125,15 @@ q_manager_handle(guid,(IP,P),recv_agent(X)):-
                                                                    writeln('Space is available in the queue. ACK sent.'),
                                                                    writeln('Ack Queue':Nw_Ack_Q),
                                                                    update_ack_queue(Nw_Ack_Q)
-
+                                                                   
                                                                   )
                                                         )
 
                                              );
                                              (
-                                              intranode_queue(Lii),length(Lii,Lh),queue_length(Lenn),
-                                              agent_post(platform,(IP,P),[dq_manager_handle,dq_manager,(localhost,QP),nack(X)]),
-                                              writeln('No space is available in queue. NAK sent...')
+                                                intranode_queue(Lii),length(Lii,Lh),queue_length(Lenn),
+                                                agent_post(platform,(IP,P),[dq_manager_handle,dq_manager,(localhost,QP),nack(X)]),
+                                                writeln('No space is available in queue. NAK sent...')
                                               )
                                               ))),
                 !.
@@ -182,7 +181,7 @@ migrate_typhlet(GUID):-
 
 migrate_typhlet(GUID):- writeln('Migrate Typhlet in Q-Manager Failed for':GUID),!.
 
-% update_internode_queue/1 updates the internode_queue with the new queue list
+% update_intranode_queue/1 updates the intranode_queue with the new queue list
 :- dynamic update_intranode_queue/1.
 update_intranode_queue(Inew):-
 
@@ -325,17 +324,19 @@ create_clones(GUID,N):-
 
                         (member(Clone_ID,I)->
                         (dequeue(Clone_ID,I,In),enqueue(Clone_ID,In,Inew));
+                        writeln('here input'),
                         enqueue(Clone_ID,I,Inew)
                         ),
                         
                         update_intranode_queue(Inew),
 
+                        writeln('Lets check queue ': Inew),
+
                         %retractall(agent_kind(Clone_ID,_)),
                         %assert(agent_kind(Clone_ID,clone)),
                         %retractall(agent_parent(Clone_ID,_)),
                         %assert(agent_parent(Clone_ID,GUID)),
-
-                        platform_port(P),write('Executing':Clone_ID:P) )), !.
+                        write('Executing':Clone_ID:P) )), !.
 
 
 create_clones(GUID,N):- writeln('create_clones Failed'),!.
@@ -422,7 +423,8 @@ moveagent(_,(IP,P), recv_agent(X)):-
                 
                 writeln('Agent arrived for insertion to queue ':X),
                 writeln('Agent arrived from ':P),
-
+                platform_port(Thisport),
+                execute_agent(X, (localhost,Thisport),handler1),
                 intranode_queue(I),
                 (member(X,I)->
                          (dequeue(X,I,In),enqueue(X,In,Inew));

@@ -1173,33 +1173,37 @@ clone_agent(GUID1,(Send_Ip,Send_Port),GUID2):-
         check_syntax(clone_agent,GUID1,_Send_Ip,Send_Port,GUID2),     %added by Menaxi J Bagchi
         agent_clone(GUID1,(Send_Ip,Send_Port),GUID2).
 
-agent_clone(GUID1,(Send_Ip,Send_Port),GUID2):-
+agent_clone(GUID1,(Send_Ip,Send_Port),NGUID2):-
         retractall(get_destination_Ip(_)), assert(get_destination_Ip(Send_Ip)),
         retractall(get_destination_port(_)), assert(get_destination_port(Send_Port)),
         %((atom(GUID1),integer(Send_Port),var(GUID2))->nothing;abort),
         gensym(GUID1,GUID2),
-        %number_string(Send_Port, P),
-        %atom_concat(P, GUID2, NGUID2),
-        %writeln('Tartarus check ':NGUID2),
+        
+        number_string(Send_Port, P),
+        atom_concat(P, GUID2, NGUID2),
+        writeln('Tartarus check ':NGUID2),
         %atom(GUID2),
 
         %b_setval(NGUID2, Myvar),
         %b_getval(Myvar, GUID2),
 
-        %writeln('Tartarus check ':GUID2),
+        %writeln('Tartarus check2 ':GUID2),
+        
         get_time(TT),                                                                                                                           %%time in seconds from begining of os
-        assert(outgoing_agent(GUID2,TT,_)),
+        assert(outgoing_agent(NGUID2,TT,_)),
         assimilate_code(GUID1,AgentCode),
         %writeln('here2'),
-        replaceGUID(AgentCode,GUID1,GUID2,CloneCode),
+        replaceGUID(AgentCode,GUID1,NGUID2,CloneCode),
         %writeln('here3'),
         agent_payload(GUID1,PayloadList),
-        %writeln('here'),
+        writeln('here'),
         agent_GUID(GUID1,Handler,_),
         agent_token(GUID1,ListOfTokens),
         list_to_set(ListOfTokens,ListOfTokens2),
         get_platform_details(CloneIp,ClonePort),
-        agent_post(platform,(Send_Ip,Send_Port),[handler,platform,(CloneIp,ClonePort),send(GUID2,Handler,PayloadList,CloneCode,ListOfTokens2,TT)]),!.
+        agent_post(platform,(Send_Ip,Send_Port),[handler,platform,(CloneIp,ClonePort),send(NGUID2,Handler,PayloadList,CloneCode,ListOfTokens2,TT)]),
+        
+        !.
 
 agent_clone(GUID1,(_Ip,_Port),_):-
         print_message(error,'Clone agent Failed for: '),write(GUID1),nl,fail.		
@@ -2203,19 +2207,24 @@ assimilate_payload_code(_,[],I,I):-!.
 % AGENTCODE [(hello(qwertyu,X):-abcd(qwertyu),write('heheh')),(bbye(qwertyu):-write(bye))]
 % CLONECODE obtained will be : [(hello(zxcvbn,X):-abcd(zxcvbn),write('heheh')),(bbye(zxcvbn):-write(bye))]
 
-replaceGUID(AgentCode,GUID1,GUID2,CloneCode):-
-        replaceGUID(AgentCode,GUID1,GUID2,[],CloneCode),!.
+replaceGUID(AgentCode,GUID1,NGUID2,CloneCode):-
+        replaceGUID(AgentCode,GUID1,NGUID2,[],CloneCode),!.
 
-replaceGUID([Head|Tail],GUID1,GUID2,Incoming,Outgoing):-
+replaceGUID([Head|Tail],GUID1,NGUID2,Incoming,Outgoing):-
         term_to_atom(Head,X),
         name(X,CodeList),
+        %writeln('here21'),
         name(GUID1,Remove),
-        name(GUID2,Add),
+        name(NGUID2,Add),
+        %writeln('here22'),
         substitute_all(CodeList,Remove,Add,R),
         name(Text,R),
-        atom_to_term(Text,Text2,_),
-        append(Incoming,[Text2],NextIncoming),
-        replaceGUID(Tail,GUID1,GUID2,NextIncoming,Outgoing).
+        %writeln('here23'),
+        %atom_to_term(Text,Text2,_),
+        %writeln('here24'),
+        append(Incoming,[Text],NextIncoming),
+        %writeln('here25'),
+        replaceGUID(Tail,GUID1,NGUID2,NextIncoming,Outgoing).
 
 replaceGUID([],_,_,Incoming,Incoming).
 

@@ -22,7 +22,7 @@ startcontroller:-
    %consult("cloningOriginal.pl"),
    start_clonning_controller(15100,15200),
    create_mobile_agent(agent1,(localhost,15000),handler1,[30,32]),
-   %create_mobile_agent(agent2,(localhost,15000),handler2,[30,32]),
+   %create_mobile_agent(agent2,(localhost,15000),handler,[30,32]),
    retractall(agent_resource(_,_)), assert(agent_resource(guid,100)), retractall(agent_lifetime(_,_)), assert(agent_lifetime(guid, 10)), retractall(my_service_reward(_,_)), assert(my_service_reward(guid, 0)),
    add_payload(agent1,[(agent_resource,2), (agent_lifetime, 2), (my_service_reward, 2)]),
    %add_payload(agent2,[(agent_resource,2)]),
