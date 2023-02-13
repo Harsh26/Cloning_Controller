@@ -74,6 +74,7 @@ child('C').
 :-dynamic agent_max_resource/2.
 agent_max_resource(100).
 
+:-dynamic global_mutex/1.
 
 %---------------------Declarations End----------------------------------------%
 
@@ -81,10 +82,14 @@ agent_max_resource(100).
 start_clonning_controller(EP,DP):-
                                 %enqueue_port(EP),
                                 %dequeue_port(DP),
+
+                                mutex_create(GMID),
+                                assert(global_mutex(GMID)),
+
                                 set_log_server(localhost, 6666),
                                 q_manager(EP),
                                 dq_manager(DP),
-                                thread_create(timer_release,_,[detached(false)]),
+                                thread_create(timer_release(ID),ID,[detached(false)]),
                                 !.
 
 
@@ -104,6 +109,10 @@ q_manager(P):- write('q_manager failed'),!.
 :- dynamic q_manager_handle/3.
 
 q_manager_handle(guid,(IP,P),recv_agent(X)):-
+                                            
+                                            global_mutex(GMID),
+                                            mutex_lock(GMID),
+
                                             writeln('Request received for the arrival of agent':X),
                                             agent_list_new(Aglist),
 
@@ -120,10 +129,10 @@ q_manager_handle(guid,(IP,P),recv_agent(X)):-
                                                        (
                                                          (member([X,_],Ack_QQ))->
                                                                  (
-                                                                   nothing,writeln('Request ignored for receive.. already sent ealier.')
+                                                                   writeln('Request ignored for receive.. already sent ealier.')
                                                                  );
                                                                  (
-
+                                                                   
                                                                    ack_q(Ack_Q),
                                                                    q_port(QP),
                                                                    %writeln('Q-Port ':QP),
@@ -141,13 +150,12 @@ q_manager_handle(guid,(IP,P),recv_agent(X)):-
                                                                    send_log(_, W2)
                                                                   )
                                                         )
-
+                                                
                                              );
                                              (
                                                 intranode_queue(Lii),length(Lii,Lh),queue_length(Lenn),
                                                 agent_post(platform,(IP,P),[dq_manager_handle,dq_manager,(localhost,QP),nack(X)]),
                                                 writeln('No space is available in queue. NAK sent...')
-
                                                 ,
                                                 platform_port(QPP),
                                                 Strr1 = X, Strr2 = ' requested for arrival at Platform ', Strr3 = QPP, Strr4 = ' which has no space.',
@@ -157,6 +165,9 @@ q_manager_handle(guid,(IP,P),recv_agent(X)):-
                                                 send_log(_, Wr3)
                                               )
                                               ))),
+                                              
+                                              sleep(5),
+                                              mutex_unlock(GMID),
                 !.
                 
 q_manager_handle(guid,(IP,P),recv_agent(X)):- write('handler failed!!'),!.
@@ -235,7 +246,9 @@ update_ack_queue(X):- write('update_ack_queue Failed'),!.
 
 :- dynamic initiate_migration/1.
 initiate_migration(GUID):-
-                                
+                                global_mutex(GMID),
+                                mutex_lock(GMID),
+
                                 leaving_queue(GUID,IP,Port),
                                 
                                 neighbour(NP,NEP),
@@ -265,6 +278,7 @@ initiate_migration(GUID):-
                                 writeln('Initiate_migration Successful!!!, updated intranode queue:':I),
 
                                 send_log(_, 'Initiate_migration Successful!!!'),
+                                mutex_unlock(GMID),
                                 !.
 initiate_migration(GUID):- writeln('initiate_migration Failed'),!.
 
@@ -285,6 +299,9 @@ assign_type(GUID, X):- write('Assigning type Failed!!'), !.
 % given in the paper and add those clone to the queue.
 :-dynamic clone_if_necessary/1.
 clone_if_necessary(GUID):-
+
+              global_mutex(GMID),
+              mutex_lock(GMID),
               platform_port(QP),
 
               no_of_clone(GUID,N), %writeln(N),
@@ -300,6 +317,7 @@ clone_if_necessary(GUID):-
                 send_log(_, W4)
 
                 )),
+                mutex_unlock(GMID),
                 !.
 
 clone_if_necessary(GUID):- writeln('clone_if_necessary/1 Failed'),!.
@@ -400,7 +418,7 @@ create_clones(GUID,N):-
                         
                         update_intranode_queue(Inew),
 
-                        %writeln('Lets check queue ': Inew),
+                        writeln('Lets check queue ': Inew),
 
                         %retractall(agent_kind(Clone_ID,_)),
                         %assert(agent_kind(Clone_ID,clone)),
@@ -495,6 +513,10 @@ get_sublist(Pos,List,List2):- write('get_sublist Failed'),!.
 :-dynamic moveagent/3.
 moveagent(_,(IP,P), recv_agent(X)):-    	
 
+        
+        global_mutex(GMID),
+        mutex_lock(GMID),
+
         agent_list_new(Aglist),
 
         (member(X, Aglist)->(
@@ -523,7 +545,10 @@ moveagent(_,(IP,P), recv_agent(X)):-
                 need(NEED),
                 agent_type(X, TYPE),
 
-                (NEED = TYPE)->( update_resource(X), update_lifetime(X) );(nothing) );(nothing)),
+                (NEED = TYPE)->( update_resource(X), update_lifetime(X) );(nothing) );(nothing)
+        ),
+
+        mutex_unlock(GMID),
         
         !.
                 
@@ -682,6 +707,9 @@ dq_manager_handle(guid,(IP,P),ack(X)):- writeln('dq_manager_handle ACK Failed'),
 % If the received response from the destination is an NAK.
 dq_manager_handle(guid,(IP,P),nack(X)):-
 
+                global_mutex(GMID),
+                mutex_lock(GMID),
+
                 (transit_req(X)->
                                        retractall(transit_req(X)),
                                        assert(transit_req(0)),
@@ -698,6 +726,8 @@ dq_manager_handle(guid,(IP,P),nack(X)):-
                 (nothing)
                 ),
 
+                mutex_unlock(GMID),
+
                 !.
 
 dq_manager_handle(guid,(IP,P),nack(X)):- writeln('dq_manager_handle NAK Failed'),!.
@@ -707,6 +737,10 @@ dq_manager_handle(guid,(IP,P),nack(X)):- writeln('dq_manager_handle NAK Failed')
 
 % To release agent from the intranode queue.
 dq_manager_handle(guid,(IP,P),release(Q)):-
+
+                        global_mutex(GMID),
+                        mutex_lock(GMID),
+
                         intranode_queue(Queue),
                         length(Queue,Len),
                         Len > 0,                % If queue is empty keep checking.
@@ -755,13 +789,20 @@ dq_manager_handle(guid,(IP,P),release(Q)):-
                         %writeln('QUEUE PROBLEM RA.'),
                         delete(Aglist,q_manager,Aglist1),
                         delete(Aglist1,dq_manager,Aglist2),
-                        update_intranode_queue(Aglist2)),!.
+                        update_intranode_queue(Aglist2)),
+                        
+                        mutex_unlock(GMID),
+                        !.
 
 dq_manager_handle(guid,(IP,P),release(Q)):-
-                                                        intranode_queue(Queue),
-                                                        length(Queue,Len),
-                                                        Len = 0,
-                                                        writeln('Queue is empty!!'),!.
+                                        global_mutex(GMID),
+                                        mutex_lock(GMID),
+                                        intranode_queue(Queue),
+                                        length(Queue,Len),
+                                        Len = 0,
+                                        writeln('Queue is empty!!'),
+                                        mutex_unlock(GMID),
+                                        !.
                                                         
 dq_manager_handle(guid,(IP,P),release(Q)):- writeln('DQ Mananger release() Failed due to some reason...'),!.
 
@@ -777,7 +818,9 @@ leave_queue(Agent,NIP,NPort):-      %NIP - neighbour IP
                 assert(transit_req(Agent)),
                 agent_post(platform,(localhost,NEP),[q_manager_handle,q_manager,(localhost,DP),recv_agent(Agent)]),
                 writeln('Transit request sent':Agent:NP),
-                set_transfer(Agent,localhost,NP),!.
+                set_transfer(Agent,localhost,NP),
+                
+                !.
 
 leave_queue(Agent,IP,Port):- writeln('leave_queue Failed'),!.
 
@@ -806,6 +849,9 @@ leave_queue(Agent,IP,Port):- writeln('leave_queue Failed'),!.
 
 :- dynamic release_agent/0.
 release_agent:-
+                        global_mutex(GMID),
+                        mutex_lock(GMID),
+
                         writeln('Release Agent called...'),
                         
                         need(N),
@@ -831,22 +877,28 @@ release_agent:-
                                 ((Len > 0)->(intranode_queue([Agent|Tail]), 
                                                 %writeln('Length test ':Len), writeln('Agent test ':Agent), 
                                                 clone_if_necessary(Agent), 
-                                                %sleep(3), 
+                                                sleep(3), 
                                                 %writeln('chk failure 11'),
                                                 decrement_lifetime, 
                                                 %sleep(3), 
                                                 %writeln('chk failure 12'),
                                                 showlifetime, 
                                                 %writeln('chk failure 13'), 
-                                                leave_queue(Agent, localhost, NP), 
+
+                                                intranode_queue(Ileave), length(Ileave,Lenleave),
+                                                
+                                                (Lenleave > 0)->(leave_queue(Agent, localhost, NP));(nothing),
+
+                                                 
                                                 %writeln('chk failure 14'),
                                                 enqueue(H, T, Tn), 
+                                                
                                                 %writeln('chk failure 5'),
-                                                retractall(node_neighbours(_)), assert(node_neighbours(Tn)));
-                                                (%sleep(3), 
-                                                decrement_lifetime,
-                                                %sleep(3), 
-                                                showlifetime)))
+                                                retractall(node_neighbours(_)), assert(node_neighbours(Tn)))
+                                                
+                                                ;
+                                                
+                                                (nothing)))
                                 
                                 ;
 
@@ -854,12 +906,14 @@ release_agent:-
                                 (Len > 0)->(intranode_queue([Agent|Tail]), 
                                                 %writeln('Length test ':Len), writeln('Agent test ':Agent), 
                                                 clone_if_necessary(Agent), 
-                                                %sleep(3), 
+                                                sleep(3), 
                                                 %writeln('chk failure 7'), 
                                                 decrement_lifetime, showlifetime)
 
-                                ;(decrement_lifetime, showlifetime))),
+                                ;(nothing))
+                        ),
 
+                        mutex_unlock(GMID),
                         !.
 release_agent:-
                 writeln('Release Agent Failed !'),!.
@@ -939,9 +993,9 @@ del_zero_lifetime([H|T]):-
 
         agent_lifetime(H, Li),
 
-        ((Li =< 0)->(writeln('Agent Purged ':H), Str1 = H, Str2 = ' is purged..', atom_concat(Str1, Str2, W1),
+        ((Li =< 0)->(writeln('Agent Purged ':H),purge_agent(H), Str1 = H, Str2 = ' is purged..', atom_concat(Str1, Str2, W1),
         
-        send_log(_, W1),purge_agent(H));(enqueue(H, Q, Qn), retractall(tmp_q(_)), assert(tmp_q(Qn)))),
+        send_log(_, W1));(enqueue(H, Q, Qn), retractall(tmp_q(_)), assert(tmp_q(Qn)))),
 
         del_zero_lifetime(T),
 
@@ -1016,6 +1070,7 @@ decrement_lifetime:-
         %writeln('Decrement cycle Done ! now lifetimes ':Ii),
 
         del_zero_lifetime(Ii),
+        
         writeln('Ii here ' :Ii),
         tmp_q(R),
         writeln('Q here ' :R),
@@ -1024,18 +1079,31 @@ decrement_lifetime:-
         %writeln('New Iii here ' :Iii),
         retractall(tmp_q(_)),
         assert(tmp_q([])),
+
+        %sleep(5),
         
         agent_list_new(AGV),
         writeln('Aglist ': AGV),
+
+        %list_agents,
 
         !.
 
 
 :-dynamic timer_release/0.
 
-timer_release:-
-        sleep(10),release_agent,
-        timer_release,
+timer_release(ID):-
+        writeln('Thread ID ':ID),
+        sleep(10),
+        
+        %mutex_create(MID),
+        
+        %mutex_lock(MID),
+        release_agent,
+        %mutex_unlock(MID),
+
+        %mutex_destroy(MID),
+        timer_release(ID),
         !.
 
 
