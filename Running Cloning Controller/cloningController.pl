@@ -71,10 +71,16 @@ child('C').
 %Harsh added..
 :-dynamic platform_port/1.
 
-:-dynamic agent_max_resource/2.
+:-dynamic agent_max_resource/1.
 agent_max_resource(100).
 
+:-dynamic agent_min_resource/1.
+agent_min_resource(10).
+
 :-dynamic global_mutex/1.
+
+:-dynamic satisfied_need/1.
+
 
 %---------------------Declarations End----------------------------------------%
 
@@ -89,14 +95,16 @@ start_clonning_controller(EP,DP):-
                                 set_log_server(localhost, 6666),
                                 q_manager(EP),
                                 dq_manager(DP),
-                                thread_create(timer_release(ID),ID,[detached(false)]),
+                                thread_create(timer_release(ID, 0),ID,[detached(false)]),
                                 !.
 
 
 start_queue_manager(EP,DP):- write('start_queue_manager Failed'),!.
 
 init_need(N):-
-        assert(need(N)),!.
+        retractall(need(_)),
+        assert(need(N)),
+        !.
 
 q_manager(P):-
               create_static_agent(q_manager,(localhost,P),q_manager_handle,[30]),
@@ -305,7 +313,17 @@ clone_if_necessary(GUID):-
               platform_port(QP),
 
               no_of_clone(GUID,N), %writeln(N),
-                ( (N = 0)->(writeln('No Clones will be created':GUID));(writeln('Creating Clones':N), deduct_clonal_resource(GUID,N)
+
+              agent_resource(GUID, Rav),
+              agent_min_resource(Rmin),
+
+              NR is Rav - N * Rmin, 
+
+              %writeln('clone if necessary check..'),
+
+              ( (N = 0 ; NR < Rmin)->(writeln('No Clones will be created':GUID));(writeln('Original Resource ':Rav), writeln('Creating Clones':N), deduct_clonal_resource(GUID,N),
+
+              agent_resource(GUID, Rafter), writeln('Left Resource ':Rafter)
                 
                 , 
                 
@@ -365,25 +383,29 @@ cloning_pressure(Ps):- writeln('cloning_pressure Failed'),!.
 deduct_clonal_resource(GUID,NC):-
                 clone_resource(Rmin),
                 agent_resource(GUID,Rav),
-                NR is Rav/Rmin,
-                (
-                        (NR=<NC)-> N = NR; N = NC
+                
+                %NR is Rav/Rmin,
+                %(
+                %        (NR=<NC)-> N = NR; N = NC
 
-                ),
-                Rav_next is Rav - (N*Rmin),
+                %),
+                
+                Rav_next is Rav - (NC*Rmin),
 
                 ((Rav_next<0)->
                         (
-                         N1 is N-1,deduct_clonal_resource(GUID, N1),
+                         %N1 is N-1,deduct_clonal_resource(GUID, N1),
                                 nothing
                         );
 
                         (
-                                
                                 set_resource(GUID,Rav_next),
-                                create_clones(GUID,N)
+                                create_clones(GUID,NC)
                         )
-                ),!.
+                ),
+                
+                
+                !.
 
 deduct_clonal_resource(GUID,NC):- write('deduct_clonal_resource Failed'),!.
 
@@ -439,15 +461,11 @@ set_clone_parameter(GUID):-
                 %set_resource(GUID,R),
                 %set_reward(GUID, S),
 
-                
-                
                 retractall(agent_lifetime(GUID,_)),
                 assert(agent_lifetime(GUID,L)),
 
-                
                 retractall(agent_resource(GUID,_)),
                 assert(agent_resource(GUID,R)),
-
                 
                 retractall(my_service_reward(GUID,_)),
                 assert(my_service_reward(GUID, S)), !.
@@ -591,7 +609,7 @@ update_resource(GUID):-
         Y is -1/Rav,
         %writeln('Y is ': Y),
         
-        ((P = 0)->(Z is 1 - 1/0.1);(Z is 1 - 1/P)),
+        ((P = 0)->(Z is 1 - 1/0.001);(Z is 1 - 1/P)),
         
         %writeln('Z is ':Z),
 
@@ -615,7 +633,7 @@ update_resource(GUID):-
         %((Rav >= 1) -> ((P < 4) -> writeln('hihi') ; writeln('byby');nothing)),
 
         (
-            ((Rav >= 3), (P =< 1)) -> (Rn is Rav + Mul11 + Mul12) ;
+            ((Rav >= 1), (P =< 1)) -> (Rn is Rav + Mul11 + Mul12) ;
             ((Rav < 1), (P < 1)) -> (Rn is Rav + Tc + Mul21) ;
             ((P > 1)) -> (Rn is Rav +  Mul31 + Mul32)
         ),
@@ -855,7 +873,7 @@ release_agent:-
                         writeln('Release Agent called...'),
                         
                         need(N),
-                        writeln('Need at this Platform ':N),
+                        
 
                         node_neighbours(X),
 
@@ -867,7 +885,7 @@ release_agent:-
 
                         %writeln('chk failure 1'),
 
-                        ((L > 0)->(node_neighbours([H | T]), nth0(0, H, Elem), nth0(1, H, Elem1), %writeln('Elem ':Elem), 
+                        (((L > 0)->(node_neighbours([H | T]), nth0(0, H, Elem), nth0(1, H, Elem1), %writeln('Elem ':Elem), 
                                         %writeln('Elem1':Elem1), 
                                         NP is Elem, NEP is Elem1, %writeln('chk failure 2'),
         
@@ -903,14 +921,14 @@ release_agent:-
                                 ;
 
                                 (intranode_queue(I), length(I,Len), %writeln('chk failure 6'),
-                                (Len > 0)->(intranode_queue([Agent|Tail]), 
+                                ((Len > 0)->(intranode_queue([Agent|Tail]), 
                                                 %writeln('Length test ':Len), writeln('Agent test ':Agent), 
                                                 clone_if_necessary(Agent), 
                                                 sleep(3), 
                                                 %writeln('chk failure 7'), 
                                                 decrement_lifetime, showlifetime)
 
-                                ;(nothing))
+                                ;(nothing))))
                         ),
 
                         mutex_unlock(GMID),
@@ -1089,21 +1107,96 @@ decrement_lifetime:-
 
         !.
 
+:-dynamic need_a_member/2.
 
-:-dynamic timer_release/0.
+need_a_member(Need, []).
+need_a_member(Need, [H|T]) :- 
+        
+        agent_type(H, Typ),
+        writeln('Check integrity ':H),
+        writeln('Check integrity ':Typ),
+        writeln('Check integrity ':Need),
 
-timer_release(ID):-
+        ((Typ = Need)->(retractall(satisfied_need(_)), assert(satisfied_need(1)));(nothing)), 
+
+        need_a_member(Need, T), 
+        
+        !.
+
+need_a_member(Need, [_|_]):-
+
+        writeln('Need a member failed..'), !.
+
+
+
+:-dynamic see_if_satisfy/1.
+
+see_if_satisfy(Needsat):-
+
+        writeln('See if satisfy called..':Needsat),
+        intranode_queue(I),
+        length(I, Len),
+        satisfied_need(SSN),
+        writeln('This is SSN ':SSN),
+
+        ((Len > 0, SSN =\= -1)->
+                        (
+                                need_a_member(Needsat, I),
+                                satisfied_need(SN),        
+                                writeln('This is SN ':SN),                        
+                                ((SN =:= 1)->(writeln("Need of platform satisfied.. It needed ":Needsat), retractall(satisfied_need(_)), assert(satisfied_need(-1)));(retractall(satisfied_need(_)), assert(satisfied_need(0))))
+                                
+                        )
+                        ;
+                        (nothing)
+        ),
+
+        writeln('See if satisfy ended..'),
+        !.
+
+see_if_satisfy(Needsat):-
+        writeln("see_if_satisfy fails.."), !.
+
+
+:-dynamic timer_release/2.
+
+timer_release(ID, N):-
         writeln('Thread ID ':ID),
-        sleep(10),
-        
-        %mutex_create(MID),
-        
-        %mutex_lock(MID),
-        release_agent,
-        %mutex_unlock(MID),
+        sleep(5),
 
-        %mutex_destroy(MID),
-        timer_release(ID),
+        need(Needsat),
+        
+        see_if_satisfy(Needsat),
+
+        (((N mod 5 =:= 0)->(
+
+                satisfied_need(SN), need(Need),
+                ((SN =:= 0)->(writeln("Need of platform NOT satisfied.. It needed ":Need));(nothing)),
+
+                need_train([H|T]),
+
+                writeln('Platform NEEDS the service of Agent ':H),
+                retractall(need(_)),
+                assert(need(H)),
+
+                enqueue(H, T, Tn),                 
+                retractall(need_train(_)), 
+                assert(need_train(Tn)),
+
+                retractall(satisfied_need(_)),
+                assert(satisfied_need(0))
+                
+         );(nothing))
+        ),
+
+        %writeln('Again here my boi'),
+        
+        sleep(5),
+        release_agent,
+        
+        N1 is N + 1,
+        timer_release(ID, N1),
+        
         !.
 
 
