@@ -1830,12 +1830,12 @@ handler( platform, (_Ip_sender,_Port_sender), send(_GUID,_Handler,_PayloadList,[
 handler(server,(Sender_Ip,Sender_Port),agent_message(GUID,Message)):-
         ttyflush,
         get_time(Timestamp),
-        nl,write(Timestamp),write(' '),write(GUID),write(' '),write(Sender_Ip),write(' '),write(Sender_Port),write(' '),write(Message),
+        nl,write('\n'),write(Timestamp),write(' '),write(GUID),write(' '),write(Sender_Ip),write(' '),write(Sender_Port),write(' '),write('--->'),write(Message), writeln('\n'),
         ttyflush,
         open('server_log.txt',append,X),
         current_output(Y),
         set_output(X),
-        nl,write(Timestamp),write(' '),write(GUID),write(' '),write(Sender_Ip),write(' '),write(Sender_Port),write(' '),write(Message),
+        nl,write('\n'),write(Timestamp),write(' '),write(GUID),write(' '),write(Sender_Ip),write(' '),write(Sender_Port),write(' '),write('--->'),write(Message), writeln('\n'),
         set_output(Y),
         close(X),!;
         print_message(warning,'handler(server,(Sender_Ip,Sender_Port),agent_message(GUID,Message)) failed').
@@ -1843,12 +1843,12 @@ handler(server,(Sender_Ip,Sender_Port),agent_message(GUID,Message)):-
 handler(serverr,(Sender_Ip,Sender_Port),agent_message(GUID,Message)):-
         ttyflush,
         get_time(Timestamp),
-        nl,write(Timestamp),write(' '),write(GUID),write(' '),write(Sender_Ip),write(' '),write(Sender_Port),write(' '),write(Message),
+        nl,write(Timestamp),write(' '),write(GUID),write(' '),write(Sender_Ip),write(' '),write(Sender_Port),write(' '),write('--->'),write(Message), writeln('\n'),
         ttyflush,
         open('server_log1.txt',append,X),
         current_output(Y),
         set_output(X),
-        nl,write(Timestamp),write(' '),write(GUID),write(' '),write(Sender_Ip),write(' '),write(Sender_Port),write(' '),write(Message),
+        nl,write(Timestamp),write(' '),write(GUID),write(' '),write(Sender_Ip),write(' '),write(Sender_Port),write(' '),write('--->'),write(Message), writeln('\n'),
         set_output(Y),
         close(X),!;
         print_message(warning,'handler(server,(Sender_Ip,Sender_Port),agent_message(GUID,Message)) failed').
@@ -1856,12 +1856,12 @@ handler(serverr,(Sender_Ip,Sender_Port),agent_message(GUID,Message)):-
 handler(serverrr,(Sender_Ip,Sender_Port),agent_message(GUID,Message)):-
         ttyflush,
         get_time(Timestamp),
-        nl,write(Timestamp),write(' '),write(GUID),write(' '),write(Sender_Ip),write(' '),write(Sender_Port),write(' '),write(Message),
+        nl,write(Timestamp),write(' '),write(GUID),write(' '),write(Sender_Ip),write(' '),write(Sender_Port),write(' '),write('--->'),write(Message), writeln('\n'),
         ttyflush,
         open('server_log2.txt',append,X),
         current_output(Y),
         set_output(X),
-        nl,write(Timestamp),write(' '),write(GUID),write(' '),write(Sender_Ip),write(' '),write(Sender_Port),write(' '),write(Message),
+        nl,write(Timestamp),write(' '),write(GUID),write(' '),write(Sender_Ip),write(' '),write(Sender_Port),write(' '),write('--->'),write(Message), writeln('\n'),
         set_output(Y),
         close(X),!;
         print_message(warning,'handler(server,(Sender_Ip,Sender_Port),agent_message(GUID,Message)) failed').

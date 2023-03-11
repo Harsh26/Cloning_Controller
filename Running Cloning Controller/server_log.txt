@@ -1,0 +1,2698 @@
+
+
+1678514561.119175 _26 localhost 15000 --->agent1 started at 15000
+
+
+
+1678514561.120309 _26 localhost 15000 --->Intranode Queue Looks like this: agent1
+
+
+
+1678514564.793211 _26 localhost 15002 --->agent2 started at 15002
+
+
+
+1678514564.794536 _26 localhost 15002 --->Intranode Queue Looks like this: agent2
+
+
+
+1678514566.438898 _26 localhost 15003 --->agent3 started at 15003
+
+
+
+1678514566.440066 _26 localhost 15003 --->Intranode Queue Looks like this: agent3
+
+
+
+1678514624.10906 _26 localhost 15000 --->agent1 resource is increased to 100
+
+
+
+1678514624.11166 _26 localhost 15000 --->agent1 lifetime is increased to 17
+
+
+
+1678514627.187272 _26 localhost 15000 --->4 number of clones made at platform 15000 of agent1
+
+
+
+1678514629.202904 _26 localhost 15000 --->Lifetime of agent agent1 is: 16
+
+
+
+1678514629.206222 _26 localhost 15000 --->Lifetime of agent 15000agent11 is: 9
+
+
+
+1678514629.20771 _26 localhost 15000 --->Lifetime of agent 15000agent12 is: 9
+
+
+
+1678514629.208611 _26 localhost 15000 --->Lifetime of agent 15000agent13 is: 9
+
+
+
+1678514629.209758 _26 localhost 15000 --->Lifetime of agent 15000agent14 is: 9
+
+
+
+1678514630.82083 _26 localhost 15002 --->4 number of clones made at platform 15002 of agent2
+
+
+
+1678514631.237855 _26 localhost 15000 --->agent1 leaving platform 15000 to platform 15001
+
+
+
+
+1678514631.239264 _26 localhost 15001 --->agent1 arrived at Platform 15001
+
+
+
+1678514631.247232 _26 localhost 15000 --->Queue is: 15000agent11, 15000agent12, 15000agent13, 15000agent14 at platform 15000
+
+
+
+1678514632.472971 _26 localhost 15003 --->4 number of clones made at platform 15003 of agent3
+
+
+
+1678514632.82613 _26 localhost 15002 --->Lifetime of agent agent2 is: 9
+
+
+
+1678514632.829205 _26 localhost 15002 --->Lifetime of agent 15002agent21 is: 9
+
+
+
+1678514632.831908 _26 localhost 15002 --->Lifetime of agent 15002agent22 is: 9
+
+
+
+1678514632.833246 _26 localhost 15002 --->Lifetime of agent 15002agent23 is: 9
+
+
+
+1678514632.834305 _26 localhost 15002 --->Lifetime of agent 15002agent24 is: 9
+
+
+
+1678514634.478658 _26 localhost 15003 --->Lifetime of agent agent3 is: 9
+
+
+
+1678514634.48129 _26 localhost 15003 --->Lifetime of agent 15003agent31 is: 9
+
+
+
+1678514634.483023 _26 localhost 15003 --->Lifetime of agent 15003agent32 is: 9
+
+
+
+1678514634.484606 _26 localhost 15003 --->Lifetime of agent 15003agent33 is: 9
+
+
+
+1678514634.485791 _26 localhost 15003 --->Lifetime of agent 15003agent34 is: 9
+
+
+
+1678514634.885329 _26 localhost 15000 --->agent2 arrived at Platform 15000 from port 15002
+
+
+
+1678514634.886071 _26 localhost 15002 --->agent2 leaving platform 15002 to platform 15000
+
+
+
+1678514634.888596 _26 localhost 15002 --->Initiate_migration Successful!!!
+
+
+
+1678514634.888991 _26 localhost 15000 --->agent2 arrived at Platform 15000
+
+
+
+1678514634.895086 _26 localhost 15002 --->Queue is: 15002agent21, 15002agent22, 15002agent23, 15002agent24 at platform 15002
+
+
+
+1678514636.521578 _26 localhost 15002 --->agent3 arrived at Platform 15002 from port 15003
+
+
+
+1678514636.522727 _26 localhost 15003 --->agent3 leaving platform 15003 to platform 15002
+
+
+
+1678514636.525473 _26 localhost 15002 --->agent3 arrived at Platform 15002
+
+
+
+1678514636.525109 _26 localhost 15003 --->Initiate_migration Successful!!!
+
+
+
+1678514636.531457 _26 localhost 15003 --->Queue is: 15003agent31, 15003agent32, 15003agent33, 15003agent34 at platform 15003
+
+
+
+1678514637.968927 _26 localhost 15001 --->2 number of clones made at platform 15001 of agent1
+
+
+
+1678514639.988164 _26 localhost 15001 --->Lifetime of agent agent1 is: 15
+
+
+
+1678514639.991044 _26 localhost 15001 --->Lifetime of agent 15001agent11 is: 9
+
+
+
+1678514639.993368 _26 localhost 15001 --->Lifetime of agent 15001agent12 is: 9
+
+
+
+1678514642.008894 _26 localhost 15003 --->agent1 arrived at Platform 15003 from port 15001
+
+
+
+1678514642.009378 _26 localhost 15001 --->agent1 leaving platform 15001 to platform 15003
+
+
+
+1678514642.01108 _26 localhost 15003 --->agent1 arrived at Platform 15003
+
+
+
+1678514642.017914 _26 localhost 15001 --->Queue is: 15001agent11, 15001agent12 at platform 15001
+
+
+
+1678514644.254386 _26 localhost 15000 --->Lifetime of agent 15000agent11 is: 8
+
+
+
+1678514644.257192 _26 localhost 15000 --->Lifetime of agent 15000agent12 is: 8
+
+
+
+1678514644.259205 _26 localhost 15000 --->Lifetime of agent 15000agent13 is: 8
+
+
+
+1678514644.260543 _26 localhost 15000 --->Lifetime of agent 15000agent14 is: 8
+
+
+
+1678514644.261995 _26 localhost 15000 --->Lifetime of agent agent2 is: 8
+
+
+
+1678514644.517898 _26 localhost 15003 --->agent1 resource is increased to 100
+
+
+
+1678514644.520338 _26 localhost 15003 --->agent1 lifetime is increased to 22
+
+
+
+1678514646.285751 _26 localhost 15000 --->15000agent11 cannot enter the other platform
+
+
+
+1678514646.285425 _26 localhost 15002 --->15000agent11 requested for arrival at Platform 15002 which has no space.
+
+
+
+1678514646.288357 _26 localhost 15000 --->Intranode Queue Looks like this: 15000agent12, 15000agent13, 15000agent14, agent2, 15000agent11
+
+
+
+1678514647.884792 _26 localhost 15002 --->Lifetime of agent 15002agent21 is: 8
+
+
+
+1678514647.888214 _26 localhost 15002 --->Lifetime of agent 15002agent22 is: 8
+
+
+
+1678514647.889568 _26 localhost 15002 --->Lifetime of agent 15002agent23 is: 8
+
+
+
+1678514647.890735 _26 localhost 15002 --->Lifetime of agent 15002agent24 is: 8
+
+
+
+1678514647.8917 _26 localhost 15002 --->Lifetime of agent agent3 is: 8
+
+
+
+1678514649.555012 _26 localhost 15003 --->Lifetime of agent 15003agent31 is: 8
+
+
+
+1678514649.558445 _26 localhost 15003 --->Lifetime of agent 15003agent32 is: 8
+
+
+
+1678514649.560834 _26 localhost 15003 --->Lifetime of agent 15003agent33 is: 8
+
+
+
+1678514649.562125 _26 localhost 15003 --->Lifetime of agent 15003agent34 is: 8
+
+
+
+1678514649.563443 _26 localhost 15003 --->Lifetime of agent agent1 is: 21
+
+
+
+1678514649.906052 _26 localhost 15003 --->15002agent21 requested for arrival at Platform 15003 which has no space.
+
+
+
+1678514649.906841 _26 localhost 15002 --->15002agent21 cannot enter the other platform
+
+
+
+1678514649.908666 _26 localhost 15002 --->Intranode Queue Looks like this: 15002agent22, 15002agent23, 15002agent24, agent3, 15002agent21
+
+
+
+1678514651.575752 _26 localhost 15003 --->15003agent31 leaving platform 15003 to platform 15001
+
+
+
+
+1678514651.57795 _26 localhost 15003 --->Initiate_migration Successful!!!
+
+
+
+1678514651.578471 _26 localhost 15001 --->15003agent31 arrived at Platform 15001
+
+
+
+1678514651.582697 _26 localhost 15003 --->Queue is: 15003agent32, 15003agent33, 15003agent34, agent1 at platform 15003
+
+
+
+1678514655.04257 _26 localhost 15001 --->Lifetime of agent 15001agent11 is: 8
+
+
+
+1678514655.045505 _26 localhost 15001 --->Lifetime of agent 15001agent12 is: 8
+
+
+
+1678514655.047437 _26 localhost 15001 --->Lifetime of agent 15003agent31 is: 7
+
+
+
+1678514657.05942 _26 localhost 15002 --->15001agent11 requested for arrival at Platform 15002 which has no space.
+
+
+
+1678514657.059151 _26 localhost 15001 --->15001agent11 cannot enter the other platform
+
+
+
+1678514657.061377 _26 localhost 15001 --->Intranode Queue Looks like this: 15001agent12, 15003agent31, 15001agent11
+
+
+
+1678514659.317939 _26 localhost 15000 --->Lifetime of agent 15000agent12 is: 7
+
+
+
+1678514659.320834 _26 localhost 15000 --->Lifetime of agent 15000agent13 is: 7
+
+
+
+1678514659.323416 _26 localhost 15000 --->Lifetime of agent 15000agent14 is: 7
+
+
+
+1678514659.324586 _26 localhost 15000 --->Lifetime of agent agent2 is: 7
+
+
+
+1678514659.325757 _26 localhost 15000 --->Lifetime of agent 15000agent11 is: 7
+
+
+
+1678514661.340089 _26 localhost 15003 --->15000agent12 arrived at Platform 15003 from port 15000
+
+
+
+1678514661.34098 _26 localhost 15000 --->15000agent12 leaving platform 15000 to platform 15003
+
+
+
+1678514661.342896 _26 localhost 15000 --->Initiate_migration Successful!!!
+
+
+
+1678514661.343489 _26 localhost 15003 --->15000agent12 arrived at Platform 15003
+
+
+
+1678514661.348299 _26 localhost 15000 --->Queue is: 15000agent13, 15000agent14, agent2, 15000agent11 at platform 15000
+
+
+
+1678514662.928939 _26 localhost 15002 --->Lifetime of agent 15002agent22 is: 7
+
+
+
+1678514662.931036 _26 localhost 15002 --->Lifetime of agent 15002agent23 is: 7
+
+
+
+1678514662.932676 _26 localhost 15002 --->Lifetime of agent 15002agent24 is: 7
+
+
+
+1678514662.933906 _26 localhost 15002 --->Lifetime of agent agent3 is: 7
+
+
+
+1678514662.935006 _26 localhost 15002 --->Lifetime of agent 15002agent21 is: 7
+
+
+
+1678514664.612105 _26 localhost 15003 --->Lifetime of agent 15003agent32 is: 7
+
+
+
+1678514664.615104 _26 localhost 15003 --->Lifetime of agent 15003agent33 is: 7
+
+
+
+1678514664.61769 _26 localhost 15003 --->Lifetime of agent 15003agent34 is: 7
+
+
+
+1678514664.618769 _26 localhost 15003 --->Lifetime of agent agent1 is: 20
+
+
+
+1678514664.619753 _26 localhost 15003 --->Lifetime of agent 15000agent12 is: 6
+
+
+
+1678514664.946416 _26 localhost 15001 --->15002agent22 arrived at Platform 15001 from port 15002
+
+
+
+1678514664.94674 _26 localhost 15002 --->15002agent22 leaving platform 15002 to platform 15001
+
+
+
+1678514664.96912 _26 localhost 15001 --->15002agent22 arrived at Platform 15001
+
+
+
+1678514664.969365 _26 localhost 15002 --->Initiate_migration Successful!!!
+
+
+
+1678514664.972653 _26 localhost 15002 --->Queue is: 15002agent23, 15002agent24, agent3, 15002agent21 at platform 15002
+
+
+
+1678514666.626903 _26 localhost 15003 --->15003agent32 leaving platform 15003 to platform 15000
+
+
+
+
+1678514666.628571 _26 localhost 15003 --->Initiate_migration Successful!!!
+
+00
+
+
+
+1678514666.631316 _26 localhost 15003 --->Queue is: 15003agent33, 15003agent34, agent1, 15000agent12 at platform 15003
+
+
+
+1678514669.348518 _26 localhost 15000 --->15003agent32 resource is increased to 100
+
+
+
+1678514669.349488 _26 localhost 15000 --->15003agent32 lifetime is increased to 14
+
+
+
+1678514670.10227 _26 localhost 15001 --->Lifetime of agent 15001agent12 is: 7
+
+
+
+1678514670.106104 _26 localhost 15001 --->Lifetime of agent 15003agent31 is: 6
+
+
+
+1678514670.108627 _26 localhost 15001 --->Lifetime of agent 15001agent11 is: 7
+
+
+
+1678514670.110455 _26 localhost 15001 --->Lifetime of agent 15002agent22 is: 6
+
+
+
+1678514672.134082 _26 localhost 15000 --->15001agent12 requested for arrival at Platform 15000 which has no space.
+
+
+
+1678514672.134574 _26 localhost 15001 --->15001agent12 cannot enter the other platform
+
+
+
+1678514672.136532 _26 localhost 15001 --->Intranode Queue Looks like this: 15003agent31, 15001agent11, 15002agent22, 15001agent12
+
+
+
+1678514674.364782 _26 localhost 15000 --->Lifetime of agent 15000agent13 is: 6
+
+
+
+1678514674.367744 _26 localhost 15000 --->Lifetime of agent 15000agent14 is: 6
+
+
+
+1678514674.369782 _26 localhost 15000 --->Lifetime of agent agent2 is: 6
+
+
+
+1678514674.371024 _26 localhost 15000 --->Lifetime of agent 15000agent11 is: 6
+
+
+
+1678514674.37204 _26 localhost 15000 --->Lifetime of agent 15003agent32 is: 13
+
+
+
+1678514676.385093 _26 localhost 15001 --->15000agent13 arrived at Platform 15001 from port 15000
+
+
+
+1678514676.387867 _26 localhost 15001 --->15000agent13 arrived at Platform 15001
+
+
+
+1678514676.387327 _26 localhost 15000 --->Initiate_migration Successful!!!
+
+
+
+1678514676.393411 _26 localhost 15000 --->Queue is: 15000agent14, agent2, 15000agent11, 15003agent32 at platform 15000
+
+
+
+1678514677.954412 _26 localhost 15002 --->Lifetime of agent 15002agent23 is: 6
+
+
+
+1678514677.957401 _26 localhost 15002 --->Lifetime of agent 15002agent24 is: 6
+
+
+
+1678514677.95984 _26 localhost 15002 --->Lifetime of agent agent3 is: 6
+
+
+
+1678514677.960709 _26 localhost 15002 --->Lifetime of agent 15002agent21 is: 6
+
+
+
+1678514679.653446 _26 localhost 15003 --->Lifetime of agent 15003agent33 is: 6
+
+
+
+1678514679.65622 _26 localhost 15003 --->Lifetime of agent 15003agent34 is: 6
+
+
+
+1678514679.658478 _26 localhost 15003 --->Lifetime of agent agent1 is: 19
+
+
+
+1678514679.660027 _26 localhost 15003 --->Lifetime of agent 15000agent12 is: 5
+
+
+
+1678514679.972926 _26 localhost 15000 --->15002agent23 arrived at Platform 15000 from port 15002
+
+
+
+1678514679.974715 _26 localhost 15002 --->Initiate_migration Successful!!!
+
+
+
+1678514679.974506 _26 localhost 15000 --->15002agent23 arrived at Platform 15000
+
+
+
+1678514679.973506 _26 localhost 15002 --->15002agent23 leaving platform 15002 to platform 15000
+
+
+
+1678514679.977777 _26 localhost 15002 --->Queue is: 15002agent24, agent3, 15002agent21 at platform 15002
+
+
+
+1678514681.672087 _26 localhost 15003 --->15003agent33 leaving platform 15003 to platform 15002
+
+
+
+1678514681.672495 _26 localhost 15002 --->15003agent33 arrived at Platform 15002 from port 15003
+
+
+
+1678514681.674512 _26 localhost 15003 --->Initiate_migration Successful!!!
+
+
+
+1678514681.694756 _26 localhost 15003 --->Queue is: 15003agent34, agent1, 15000agent12 at platform 15003
+
+
+
+1678514684.387128 _26 localhost 15000 --->15000agent14 resource is increased to 100
+
+
+
+1678514684.390393 _26 localhost 15000 --->15000agent14 lifetime is increased to 13
+
+
+
+1678514685.175283 _26 localhost 15001 --->Lifetime of agent 15003agent31 is: 5
+
+
+
+1678514685.176531 _26 localhost 15001 --->Lifetime of agent 15001agent11 is: 6
+
+
+
+1678514685.177627 _26 localhost 15001 --->Lifetime of agent 15002agent22 is: 5
+
+
+
+1678514685.178849 _26 localhost 15001 --->Lifetime of agent 15001agent12 is: 6
+
+
+
+1678514685.179975 _26 localhost 15001 --->Lifetime of agent 15000agent13 is: 5
+
+
+
+1678514687.191596 _26 localhost 15001 --->15003agent31 leaving platform 15001 to platform 15003
+
+
+
+1678514687.191175 _26 localhost 15003 --->15003agent31 arrived at Platform 15003 from port 15001
+
+
+
+1678514687.193019 _26 localhost 15003 --->15003agent31 arrived at Platform 15003
+
+
+
+1678514687.192832 _26 localhost 15001 --->Initiate_migration Successful!!!
+
+
+
+1678514687.195864 _26 localhost 15001 --->Queue is: 15001agent11, 15002agent22, 15001agent12, 15000agent13 at platform 15001
+
+
+
+1678514689.407287 _26 localhost 15000 --->Lifetime of agent 15000agent14 is: 12
+
+
+
+1678514689.409842 _26 localhost 15000 --->Lifetime of agent agent2 is: 5
+
+
+
+1678514689.41215 _26 localhost 15000 --->Lifetime of agent 15000agent11 is: 5
+
+
+
+1678514689.413899 _26 localhost 15000 --->Lifetime of agent 15003agent32 is: 12
+
+
+
+1678514689.415139 _26 localhost 15000 --->Lifetime of agent 15002agent23 is: 5
+
+
+
+1678514691.430598 _26 localhost 15002 --->15000agent14 arrived at Platform 15002 from port 15000
+
+
+
+1678514691.433621 _26 localhost 15000 --->Initiate_migration Successful!!!
+
+
+
+1678514691.434036 _26 localhost 15002 --->15000agent14 arrived at Platform 15002
+
+
+
+1678514691.438447 _26 localhost 15000 --->Queue is: agent2, 15000agent11, 15003agent32, 15002agent23 at platform 15000
+
+
+
+1678514693.000332 _26 localhost 15002 --->Lifetime of agent 15002agent24 is: 5
+
+
+
+1678514693.003062 _26 localhost 15002 --->Lifetime of agent agent3 is: 5
+
+
+
+1678514693.006072 _26 localhost 15002 --->Lifetime of agent 15002agent21 is: 5
+
+
+
+1678514693.009381 _26 localhost 15002 --->Lifetime of agent 15003agent33 is: 5
+
+
+
+1678514693.013432 _26 localhost 15002 --->Lifetime of agent 15000agent14 is: 11
+
+
+
+1678514694.699557 _26 localhost 15003 --->Lifetime of agent 15003agent34 is: 5
+
+
+
+1678514694.702432 _26 localhost 15003 --->Lifetime of agent agent1 is: 18
+
+
+
+1678514694.705084 _26 localhost 15003 --->Lifetime of agent 15000agent12 is: 4
+
+
+
+1678514694.705966 _26 localhost 15003 --->Lifetime of agent 15003agent31 is: 4
+
+
+
+1678514695.051294 _26 localhost 15003 --->15002agent24 arrived at Platform 15003 from port 15002
+
+
+
+1678514695.052082 _26 localhost 15002 --->15002agent24 leaving platform 15002 to platform 15003
+
+
+
+1678514695.05386 _26 localhost 15003 --->15002agent24 arrived at Platform 15003
+
+
+
+1678514695.057366 _26 localhost 15002 --->Queue is: agent3, 15002agent21, 15003agent33, 15000agent14 at platform 15002
+
+
+
+1678514696.721819 _26 localhost 15001 --->15003agent34 arrived at Platform 15001 from port 15003
+
+
+
+1678514696.722409 _26 localhost 15003 --->15003agent34 leaving platform 15003 to platform 15001
+
+
+
+1678514696.723934 _26 localhost 15001 --->15003agent34 arrived at Platform 15001
+
+
+
+1678514696.726537 _26 localhost 15003 --->Queue is: agent1, 15000agent12, 15003agent31, 15002agent24 at platform 15003
+
+
+
+1678514699.438695 _26 localhost 15000 --->15003agent32 resource is increased to 100
+
+
+
+1678514699.441392 _26 localhost 15000 --->15003agent32 lifetime is increased to 19
+
+
+
+1678514700.223306 _26 localhost 15001 --->Lifetime of agent 15001agent11 is: 5
+
+
+
+1678514700.226221 _26 localhost 15001 --->Lifetime of agent 15002agent22 is: 4
+
+
+
+1678514700.228605 _26 localhost 15001 --->Lifetime of agent 15001agent12 is: 5
+
+
+
+1678514700.230126 _26 localhost 15001 --->Lifetime of agent 15000agent13 is: 4
+
+
+
+1678514700.231372 _26 localhost 15001 --->Lifetime of agent 15003agent34 is: 4
+
+
+
+1678514702.241555 _26 localhost 15001 --->15001agent11 leaving platform 15001 to platform 15002
+
+
+
+1678514702.241975 _26 localhost 15002 --->15001agent11 arrived at Platform 15002 from port 15001
+
+
+
+1678514702.266289 _26 localhost 15001 --->Initiate_migration Successful!!!
+
+02
+
+
+
+1678514702.26955 _26 localhost 15001 --->Queue is: 15002agent22, 15001agent12, 15000agent13, 15003agent34 at platform 15001
+
+
+
+1678514702.459105 _26 localhost 15000 --->1 number of clones made at platform 15000 of agent2
+
+
+
+1678514703.072999 _26 localhost 15002 --->15000agent14 resource is increased to 100
+
+
+
+1678514703.075805 _26 localhost 15002 --->15000agent14 lifetime is increased to 18
+
+
+
+1678514704.47541 _26 localhost 15000 --->Lifetime of agent agent2 is: 4
+
+
+
+1678514704.478189 _26 localhost 15000 --->Lifetime of agent 15000agent11 is: 4
+
+
+
+1678514704.481224 _26 localhost 15000 --->Lifetime of agent 15003agent32 is: 18
+
+
+
+1678514704.483221 _26 localhost 15000 --->Lifetime of agent 15002agent23 is: 4
+
+
+
+1678514704.484861 _26 localhost 15000 --->Lifetime of agent 15000agent21 is: 9
+
+
+
+1678514704.741848 _26 localhost 15003 --->15002agent24 resource is increased to 100
+
+
+
+1678514704.744702 _26 localhost 15003 --->15002agent24 lifetime is increased to 12
+
+
+
+1678514706.508383 _26 localhost 15003 --->agent2 arrived at Platform 15003 from port 15000
+
+
+
+1678514706.509043 _26 localhost 15000 --->agent2 leaving platform 15000 to platform 15003
+
+
+
+1678514706.51093 _26 localhost 15003 --->agent2 arrived at Platform 15003
+
+
+
+
+1678514706.517397 _26 localhost 15000 --->Queue is: 15000agent11, 15003agent32, 15002agent23, 15000agent21 at platform 15000
+
+
+
+1678514708.109234 _26 localhost 15002 --->Lifetime of agent agent3 is: 4
+
+
+
+1678514708.11122 _26 localhost 15002 --->Lifetime of agent 15002agent21 is: 4
+
+
+
+1678514708.112266 _26 localhost 15002 --->Lifetime of agent 15003agent33 is: 4
+
+
+
+1678514708.113459 _26 localhost 15002 --->Lifetime of agent 15000agent14 is: 17
+
+
+
+1678514708.114572 _26 localhost 15002 --->Lifetime of agent 15001agent11 is: 4
+
+
+
+1678514709.787747 _26 localhost 15003 --->Lifetime of agent agent1 is: 17
+
+
+
+1678514709.791268 _26 localhost 15003 --->Lifetime of agent 15000agent12 is: 3
+
+
+
+1678514709.792896 _26 localhost 15003 --->Lifetime of agent 15003agent31 is: 3
+
+
+
+1678514709.819618 _26 localhost 15003 --->Lifetime of agent 15002agent24 is: 11
+
+
+
+1678514709.820749 _26 localhost 15003 --->Lifetime of agent agent2 is: 3
+
+
+
+1678514710.127878 _26 localhost 15002 --->agent3 leaving platform 15002 to platform 15001
+
+
+
+
+1678514710.129337 _26 localhost 15002 --->Initiate_migration Successful!!!
+
+
+
+1678514710.129565 _26 localhost 15001 --->agent3 arrived at Platform 15001
+
+
+
+1678514710.132655 _26 localhost 15002 --->Queue is: 15002agent21, 15003agent33, 15000agent14, 15001agent11 at platform 15002
+
+
+
+1678514711.842781 _26 localhost 15003 --->agent1 leaving platform 15003 to platform 15000
+
+
+
+
+1678514711.84516 _26 localhost 15000 --->agent1 arrived at Platform 15000
+
+
+
+1678514711.844649 _26 localhost 15003 --->Initiate_migration Successful!!!
+
+
+
+1678514711.847889 _26 localhost 15003 --->Queue is: 15000agent12, 15003agent31, 15002agent24, agent2 at platform 15003
+
+
+
+1678514714.511569 _26 localhost 15000 --->15000agent11 resource is increased to 100
+
+
+
+1678514714.514574 _26 localhost 15000 --->15000agent11 lifetime is increased to 11
+
+
+
+1678514715.282945 _26 localhost 15001 --->Lifetime of agent 15002agent22 is: 3
+
+
+
+1678514715.284157 _26 localhost 15001 --->Lifetime of agent 15001agent12 is: 4
+
+
+
+1678514715.285638 _26 localhost 15001 --->Lifetime of agent 15000agent13 is: 3
+
+
+
+1678514715.308894 _26 localhost 15001 --->Lifetime of agent 15003agent34 is: 3
+
+
+
+1678514715.310328 _26 localhost 15001 --->Lifetime of agent agent3 is: 3
+
+
+
+1678514717.332509 _26 localhost 15000 --->15002agent22 requested for arrival at Platform 15000 which has no space.
+
+
+
+1678514717.332207 _26 localhost 15001 --->15002agent22 cannot enter the other platform
+
+
+
+1678514717.334567 _26 localhost 15001 --->Intranode Queue Looks like this: 15001agent12, 15000agent13, 15003agent34, agent3, 15002agent22
+
+
+
+1678514718.143493 _26 localhost 15002 --->15003agent33 resource is increased to 100
+
+
+
+1678514718.146206 _26 localhost 15002 --->15003agent33 lifetime is increased to 11
+
+
+
+1678514719.558274 _26 localhost 15000 --->Lifetime of agent 15000agent11 is: 10
+
+
+
+1678514719.561895 _26 localhost 15000 --->Lifetime of agent 15003agent32 is: 17
+
+
+
+1678514719.576694 _26 localhost 15000 --->Lifetime of agent 15002agent23 is: 3
+
+
+
+1678514719.578264 _26 localhost 15000 --->Lifetime of agent 15000agent21 is: 8
+
+
+
+1678514719.579428 _26 localhost 15000 --->Lifetime of agent agent1 is: 16
+
+
+
+1678514719.860726 _26 localhost 15003 --->15000agent12 resource is increased to 100
+
+
+
+1678514719.863519 _26 localhost 15003 --->15000agent12 lifetime is increased to 10
+
+
+
+1678514721.598408 _26 localhost 15000 --->15000agent11 cannot enter the other platform
+
+
+
+1678514721.622089 _26 localhost 15000 --->Intranode Queue Looks like this: 15003agent32, 15002agent23, 15000agent21, agent1, 15000agent11
+
+
+
+1678514721.621509 _26 localhost 15001 --->15000agent11 requested for arrival at Platform 15001 which has no space.
+
+
+
+1678514722.886343 _26 localhost 15003 --->1 number of clones made at platform 15003 of 15000agent12
+
+
+
+1678514723.166864 _26 localhost 15002 --->Lifetime of agent 15002agent21 is: 3
+
+
+
+1678514723.169561 _26 localhost 15002 --->Lifetime of agent 15003agent33 is: 10
+
+
+
+1678514723.171747 _26 localhost 15002 --->Lifetime of agent 15000agent14 is: 16
+
+
+
+1678514723.173416 _26 localhost 15002 --->Lifetime of agent 15001agent11 is: 3
+
+
+
+1678514724.894497 _26 localhost 15003 --->Lifetime of agent 15000agent12 is: 9
+
+
+
+1678514724.895758 _26 localhost 15003 --->Lifetime of agent 15003agent31 is: 2
+
+
+
+1678514724.897208 _26 localhost 15003 --->Lifetime of agent 15002agent24 is: 10
+
+
+
+1678514724.898426 _26 localhost 15003 --->Lifetime of agent agent2 is: 2
+
+
+
+1678514724.899662 _26 localhost 15003 --->Lifetime of agent 1500315000agent121 is: 9
+
+
+
+1678514725.185942 _26 localhost 15000 --->15002agent21 requested for arrival at Platform 15000 which has no space.
+
+
+
+1678514725.186407 _26 localhost 15002 --->15002agent21 cannot enter the other platform
+
+
+
+1678514725.188774 _26 localhost 15002 --->Intranode Queue Looks like this: 15003agent33, 15000agent14, 15001agent11, 15002agent21
+
+
+
+1678514726.915893 _26 localhost 15002 --->15000agent12 arrived at Platform 15002 from port 15003
+
+
+
+1678514726.918938 _26 localhost 15002 --->15000agent12 arrived at Platform 15002
+
+
+
+1678514726.923462 _26 localhost 15003 --->Queue is: 15003agent31, 15002agent24, agent2, 1500315000agent121 at platform 15003
+
+
+
+1678514729.616787 _26 localhost 15000 --->15003agent32 resource is increased to 100
+
+
+
+1678514729.61917 _26 localhost 15000 --->15003agent32 lifetime is increased to 24
+
+
+
+1678514730.372367 _26 localhost 15001 --->Lifetime of agent 15001agent12 is: 3
+
+
+
+1678514730.375495 _26 localhost 15001 --->Lifetime of agent 15000agent13 is: 2
+
+
+
+1678514730.377251 _26 localhost 15001 --->Lifetime of agent 15003agent34 is: 2
+
+
+
+1678514730.378571 _26 localhost 15001 --->Lifetime of agent agent3 is: 2
+
+
+
+1678514730.379725 _26 localhost 15001 --->Lifetime of agent 15002agent22 is: 2
+
+
+
+1678514732.390913 _26 localhost 15003 --->15001agent12 arrived at Platform 15003 from port 15001
+
+
+
+1678514732.391482 _26 localhost 15001 --->15001agent12 leaving platform 15001 to platform 15003
+
+
+
+1678514732.393147 _26 localhost 15003 --->15001agent12 arrived at Platform 15003
+
+
+
+1678514732.393503 _26 localhost 15001 --->Initiate_migration Successful!!!
+
+
+
+1678514732.397514 _26 localhost 15001 --->Queue is: 15000agent13, 15003agent34, agent3, 15002agent22 at platform 15001
+
+
+
+1678514733.216732 _26 localhost 15002 --->15000agent14 resource is increased to 100
+
+
+
+1678514733.220372 _26 localhost 15002 --->15000agent14 lifetime is increased to 23
+
+
+
+1678514734.649573 _26 localhost 15000 --->Lifetime of agent 15003agent32 is: 23
+
+
+
+1678514734.677447 _26 localhost 15000 --->Lifetime of agent 15002agent23 is: 2
+
+
+
+1678514734.679522 _26 localhost 15000 --->Lifetime of agent 15000agent21 is: 7
+
+
+
+1678514734.680689 _26 localhost 15000 --->Lifetime of agent agent1 is: 15
+
+
+
+1678514734.681794 _26 localhost 15000 --->Lifetime of agent 15000agent11 is: 9
+
+
+
+1678514734.93326 _26 localhost 15003 --->15002agent24 resource is increased to 100
+
+
+
+1678514734.936109 _26 localhost 15003 --->15002agent24 lifetime is increased to 17
+
+
+
+1678514736.7 _26 localhost 15002 --->15003agent32 requested for arrival at Platform 15002 which has no space.
+
+
+
+1678514736.699749 _26 localhost 15000 --->15003agent32 cannot enter the other platform
+
+
+
+1678514736.702519 _26 localhost 15000 --->Intranode Queue Looks like this: 15002agent23, 15000agent21, agent1, 15000agent11, 15003agent32
+
+
+
+1678514738.240997 _26 localhost 15002 --->Lifetime of agent 15003agent33 is: 9
+
+
+
+1678514738.243828 _26 localhost 15002 --->Lifetime of agent 15000agent14 is: 22
+
+
+
+1678514738.246557 _26 localhost 15002 --->Lifetime of agent 15001agent11 is: 2
+
+
+
+1678514738.248262 _26 localhost 15002 --->Lifetime of agent 15002agent21 is: 2
+
+
+
+1678514738.249249 _26 localhost 15002 --->Lifetime of agent 15000agent12 is: 8
+
+
+
+1678514739.951642 _26 localhost 15003 --->Lifetime of agent 15003agent31 is: 1
+
+
+
+1678514739.953335 _26 localhost 15003 --->Lifetime of agent 15002agent24 is: 16
+
+
+
+1678514739.954566 _26 localhost 15003 --->Lifetime of agent agent2 is: 1
+
+
+
+1678514739.955847 _26 localhost 15003 --->Lifetime of agent 1500315000agent121 is: 8
+
+
+
+1678514739.956842 _26 localhost 15003 --->Lifetime of agent 15001agent12 is: 2
+
+
+
+1678514740.258927 _26 localhost 15002 --->15003agent33 cannot enter the other platform
+
+03 which has no space.
+
+
+
+1678514740.26144 _26 localhost 15002 --->Intranode Queue Looks like this: 15000agent14, 15001agent11, 15002agent21, 15000agent12, 15003agent33
+
+
+
+1678514741.972147 _26 localhost 15001 --->15003agent31 arrived at Platform 15001 from port 15003
+
+
+
+1678514741.973902 _26 localhost 15003 --->Initiate_migration Successful!!!
+
+
+
+1678514741.97324 _26 localhost 15003 --->15003agent31 leaving platform 15003 to platform 15001
+
+
+
+1678514741.974922 _26 localhost 15001 --->15003agent31 arrived at Platform 15001
+
+
+
+1678514741.977885 _26 localhost 15003 --->Queue is: 15002agent24, agent2, 1500315000agent121, 15001agent12 at platform 15003
+
+
+
+1678514744.704355 _26 localhost 15000 --->agent1 resource is increased to 100
+
+
+
+1678514744.706988 _26 localhost 15000 --->agent1 lifetime is increased to 22
+
+
+
+1678514745.430068 _26 localhost 15001 --->15003agent31 is purged..
+
+
+
+1678514745.4338 _26 localhost 15001 --->Lifetime of agent 15000agent13 is: 1
+
+
+
+1678514745.435786 _26 localhost 15001 --->Lifetime of agent 15003agent34 is: 1
+
+
+
+1678514745.437001 _26 localhost 15001 --->Lifetime of agent agent3 is: 1
+
+
+
+1678514745.438119 _26 localhost 15001 --->Lifetime of agent 15002agent22 is: 1
+
+
+
+1678514747.462208 _26 localhost 15001 --->15000agent13 cannot enter the other platform
+
+
+
+1678514747.462862 _26 localhost 15002 --->15000agent13 requested for arrival at Platform 15002 which has no space.
+
+
+
+1678514747.465314 _26 localhost 15001 --->Intranode Queue Looks like this: 15003agent34, agent3, 15002agent22, 15000agent13
+
+
+
+1678514748.279734 _26 localhost 15002 --->15003agent33 resource is increased to 100
+
+
+
+1678514748.282432 _26 localhost 15002 --->15003agent33 lifetime is increased to 16
+
+
+
+1678514749.72599 _26 localhost 15000 --->Lifetime of agent 15002agent23 is: 1
+
+
+
+1678514749.728328 _26 localhost 15000 --->Lifetime of agent 15000agent21 is: 6
+
+
+
+1678514749.730146 _26 localhost 15000 --->Lifetime of agent agent1 is: 21
+
+
+
+1678514749.731564 _26 localhost 15000 --->Lifetime of agent 15000agent11 is: 8
+
+
+
+1678514749.732876 _26 localhost 15000 --->Lifetime of agent 15003agent32 is: 22
+
+
+
+1678514749.99422 _26 localhost 15003 --->1500315000agent121 resource is increased to 100
+
+
+
+1678514749.995352 _26 localhost 15003 --->1500315000agent121 lifetime is increased to 15
+
+
+
+1678514751.744287 _26 localhost 15003 --->15002agent23 arrived at Platform 15003 from port 15000
+
+
+
+1678514751.744801 _26 localhost 15000 --->15002agent23 leaving platform 15000 to platform 15003
+
+
+
+1678514751.746833 _26 localhost 15003 --->15002agent23 arrived at Platform 15003
+
+
+
+1678514751.749698 _26 localhost 15000 --->Queue is: 15000agent21, agent1, 15000agent11, 15003agent32 at platform 15000
+
+
+
+1678514753.299536 _26 localhost 15002 --->Lifetime of agent 15000agent14 is: 21
+
+
+
+1678514753.302001 _26 localhost 15002 --->Lifetime of agent 15001agent11 is: 1
+
+
+
+1678514753.304101 _26 localhost 15002 --->Lifetime of agent 15002agent21 is: 1
+
+
+
+1678514753.305549 _26 localhost 15002 --->Lifetime of agent 15000agent12 is: 7
+
+
+
+1678514753.306725 _26 localhost 15002 --->Lifetime of agent 15003agent33 is: 15
+
+
+
+1678514755.013627 _26 localhost 15003 --->15002agent23 is purged..
+
+
+
+1678514755.015245 _26 localhost 15003 --->Lifetime of agent 15002agent24 is: 15
+
+
+
+1678514755.016409 _26 localhost 15003 --->Lifetime of agent agent2 is: 1
+
+
+
+1678514755.017619 _26 localhost 15003 --->Lifetime of agent 1500315000agent121 is: 14
+
+
+
+1678514755.018835 _26 localhost 15003 --->Lifetime of agent 15001agent12 is: 1
+
+
+
+1678514755.319323 _26 localhost 15001 --->15000agent14 arrived at Platform 15001 from port 15002
+
+
+
+1678514755.319117 _26 localhost 15002 --->15000agent14 leaving platform 15002 to platform 15001
+
+
+
+1678514755.321168 _26 localhost 15002 --->Initiate_migration Successful!!!
+
+
+
+1678514755.321595 _26 localhost 15001 --->15000agent14 arrived at Platform 15001
+
+
+
+1678514755.325714 _26 localhost 15002 --->Queue is: 15001agent11, 15002agent21, 15000agent12, 15003agent33 at platform 15002
+
+
+
+1678514757.031107 _26 localhost 15000 --->15002agent24 arrived at Platform 15000 from port 15003
+
+
+
+1678514757.03219 _26 localhost 15003 --->Initiate_migration Successful!!!
+
+
+
+1678514757.032621 _26 localhost 15000 --->15002agent24 arrived at Platform 15000
+
+
+
+1678514757.035342 _26 localhost 15003 --->Queue is: agent2, 1500315000agent121, 15001agent12 at platform 15003
+
+
+
+1678514759.768429 _26 localhost 15000 --->15003agent32 resource is increased to 100
+
+
+
+1678514759.770908 _26 localhost 15000 --->15003agent32 lifetime is increased to 29
+
+
+
+1678514760.489431 _26 localhost 15001 --->15003agent34 is purged..
+
+
+
+1678514760.490642 _26 localhost 15001 --->15002agent22 is purged..
+
+
+
+1678514760.491977 _26 localhost 15001 --->15000agent13 is purged..
+
+
+
+1678514760.493261 _26 localhost 15001 --->Lifetime of agent agent3 is: 1
+
+
+
+1678514760.494314 _26 localhost 15001 --->Lifetime of agent 15000agent14 is: 20
+
+
+
+1678514762.511739 _26 localhost 15000 --->15003agent34 requested for arrival at Platform 15000 which has no space.
+
+
+
+1678514762.512515 _26 localhost 15001 --->15003agent34 cannot enter the other platform
+
+
+
+1678514762.513631 _26 localhost 15001 --->15003agent34 started at 15001
+
+
+
+1678514762.514731 _26 localhost 15001 --->Intranode Queue Looks like this: agent3, 15000agent14, 15003agent34
+
+
+
+1678514763.326304 _26 localhost 15002 --->15001agent11 resource is increased to 100
+
+
+
+1678514763.329182 _26 localhost 15002 --->15001agent11 lifetime is increased to 8
+
+
+
+1678514764.804247 _26 localhost 15000 --->Lifetime of agent 15000agent21 is: 5
+
+
+
+1678514764.806902 _26 localhost 15000 --->Lifetime of agent agent1 is: 20
+
+
+
+1678514764.809098 _26 localhost 15000 --->Lifetime of agent 15000agent11 is: 7
+
+
+
+1678514764.810501 _26 localhost 15000 --->Lifetime of agent 15003agent32 is: 28
+
+
+
+1678514764.811684 _26 localhost 15000 --->Lifetime of agent 15002agent24 is: 14
+
+
+
+1678514765.054371 _26 localhost 15003 --->agent2 resource is increased to 100
+
+
+
+1678514765.056264 _26 localhost 15003 --->agent2 lifetime is increased to 8
+
+
+
+1678514766.351287 _26 localhost 15002 --->1 number of clones made at platform 15002 of 15001agent11
+
+
+
+1678514766.821796 _26 localhost 15001 --->15000agent21 arrived at Platform 15001 from port 15000
+
+
+
+1678514766.82475 _26 localhost 15001 --->15000agent21 arrived at Platform 15001
+
+
+
+1678514766.825038 _26 localhost 15000 --->Initiate_migration Successful!!!
+
+
+
+1678514766.82813 _26 localhost 15000 --->Queue is: agent1, 15000agent11, 15003agent32, 15002agent24 at platform 15000
+
+
+
+1678514768.070133 _26 localhost 15003 --->2 number of clones made at platform 15003 of agent2
+
+
+
+1678514768.360141 _26 localhost 15002 --->15002agent21 is purged..
+
+
+
+1678514768.364463 _26 localhost 15002 --->Lifetime of agent 15001agent11 is: 7
+
+
+
+1678514768.3677 _26 localhost 15002 --->Lifetime of agent 15000agent12 is: 6
+
+
+
+1678514768.369233 _26 localhost 15002 --->Lifetime of agent 15003agent33 is: 14
+
+
+
+1678514768.370589 _26 localhost 15002 --->Lifetime of agent 1500215001agent111 is: 9
+
+
+
+1678514770.075297 _26 localhost 15003 --->15001agent12 is purged..
+
+
+
+1678514770.078837 _26 localhost 15003 --->Lifetime of agent agent2 is: 7
+
+
+
+1678514770.080262 _26 localhost 15003 --->Lifetime of agent 1500315000agent121 is: 13
+
+
+
+1678514770.081279 _26 localhost 15003 --->Lifetime of agent 15003agent21 is: 9
+
+
+
+1678514770.082279 _26 localhost 15003 --->Lifetime of agent 15003agent22 is: 9
+
+
+
+1678514770.381007 _26 localhost 15002 --->15001agent11 leaving platform 15002 to platform 15000
+
+
+
+1678514770.382936 _26 localhost 15000 --->15001agent11 arrived at Platform 15000 from port 15002
+
+
+
+1678514770.383535 _26 localhost 15000 --->15001agent11 arrived at Platform 15000
+
+
+
+1678514770.383853 _26 localhost 15002 --->Initiate_migration Successful!!!
+
+
+
+1678514770.388747 _26 localhost 15002 --->Queue is: 15000agent12, 15003agent33, 1500215001agent111 at platform 15002
+
+
+
+1678514772.091993 _26 localhost 15003 --->agent2 leaving platform 15003 to platform 15002
+
+
+
+1678514772.091858 _26 localhost 15002 --->agent2 arrived at Platform 15002 from port 15003
+
+
+
+1678514772.093838 _26 localhost 15003 --->Initiate_migration Successful!!!
+
+
+
+1678514772.097141 _26 localhost 15003 --->Queue is: 1500315000agent121, 15003agent21, 15003agent22 at platform 15003
+
+
+
+1678514773.539786 _26 localhost 15001 --->1 number of clones made at platform 15001 of agent3
+
+
+
+1678514774.836075 _26 localhost 15000 --->agent1 resource is increased to 100
+
+
+
+1678514774.83806 _26 localhost 15000 --->agent1 lifetime is increased to 27
+
+
+
+1678514778.408122 _26 localhost 15002 --->15003agent33 resource is increased to 100
+
+
+
+1678514778.411121 _26 localhost 15002 --->15003agent33 lifetime is increased to 21
+
+
+
+1678514779.865645 _26 localhost 15000 --->Lifetime of agent agent1 is: 26
+
+
+
+1678514779.867276 _26 localhost 15000 --->Lifetime of agent 15000agent11 is: 6
+
+
+
+1678514779.86889 _26 localhost 15000 --->Lifetime of agent 15003agent32 is: 27
+
+
+
+1678514779.870152 _26 localhost 15000 --->Lifetime of agent 15002agent24 is: 13
+
+
+
+1678514779.871664 _26 localhost 15000 --->Lifetime of agent 15001agent11 is: 6
+
+
+
+1678514780.105079 _26 localhost 15003 --->1500315000agent121 resource is increased to 100
+
+
+
+1678514780.107151 _26 localhost 15003 --->1500315000agent121 lifetime is increased to 20
+
+
+
+1678514781.431169 _26 localhost 15002 --->1 number of clones made at platform 15002 of 15000agent12
+
+
+
+1678514781.888392 _26 localhost 15002 --->agent1 requested for arrival at Platform 15002 which has no space.
+
+
+
+1678514781.889036 _26 localhost 15000 --->agent1 cannot enter the other platform
+
+
+
+1678514781.89072 _26 localhost 15000 --->Intranode Queue Looks like this: 15000agent11, 15003agent32, 15002agent24, 15001agent11, agent1
+
+
+
+1678514783.123276 _26 localhost 15003 --->2 number of clones made at platform 15003 of 1500315000agent121
+
+
+
+1678514783.444424 _26 localhost 15002 --->Lifetime of agent 15000agent12 is: 5
+
+
+
+1678514783.447436 _26 localhost 15002 --->Lifetime of agent 15003agent33 is: 20
+
+
+
+1678514783.449774 _26 localhost 15002 --->Lifetime of agent 1500215001agent111 is: 8
+
+
+
+1678514783.450942 _26 localhost 15002 --->Lifetime of agent agent2 is: 6
+
+
+
+1678514783.45211 _26 localhost 15002 --->Lifetime of agent 1500215000agent121 is: 9
+
+
+
+1678514784.565134 _26 localhost 15001 --->1 number of clones made at platform 15001 of agent3
+
+
+
+1678514785.126801 _26 localhost 15003 --->Lifetime of agent 1500315000agent121 is: 19
+
+
+
+1678514785.128119 _26 localhost 15003 --->Lifetime of agent 15003agent21 is: 8
+
+
+
+1678514785.129169 _26 localhost 15003 --->Lifetime of agent 15003agent22 is: 8
+
+
+
+1678514785.130239 _26 localhost 15003 --->Lifetime of agent 150031500315000agent1211 is: 9
+
+
+
+1678514785.131566 _26 localhost 15003 --->Lifetime of agent 150031500315000agent1212 is: 9
+
+
+
+1678514785.463575 _26 localhost 15003 --->15000agent12 requested for arrival at Platform 15003 which has no space.
+
+
+
+1678514785.463376 _26 localhost 15002 --->15000agent12 cannot enter the other platform
+
+
+
+1678514785.46566 _26 localhost 15002 --->Intranode Queue Looks like this: 15003agent33, 1500215001agent111, agent2, 1500215000agent121, 15000agent12
+
+
+
+1678514786.574099 _26 localhost 15001 --->Lifetime of agent agent3 is: 1
+
+
+
+1678514786.577429 _26 localhost 15001 --->Lifetime of agent 15000agent14 is: 18
+
+
+
+1678514786.579419 _26 localhost 15001 --->Lifetime of agent 15000agent21 is: 4
+
+
+
+1678514786.580421 _26 localhost 15001 --->Lifetime of agent 15001agent31 is: 9
+
+
+
+1678514786.581512 _26 localhost 15001 --->Lifetime of agent 15001agent32 is: 9
+
+
+
+1678514788.590898 _26 localhost 15003 --->agent3 requested for arrival at Platform 15003 which has no space.
+
+
+
+1678514789.894898 _26 localhost 15000 --->15003agent32 resource is increased to 100
+
+
+
+1678514789.898074 _26 localhost 15000 --->15003agent32 lifetime is increased to 34
+
+
+
+1678514793.491663 _26 localhost 15002 --->1500215001agent111 resource is increased to 100
+
+
+
+1678514793.494625 _26 localhost 15002 --->1500215001agent111 lifetime is increased to 15
+
+
+
+1678514794.923915 _26 localhost 15000 --->Lifetime of agent 15000agent11 is: 5
+
+
+
+1678514794.925538 _26 localhost 15000 --->Lifetime of agent 15003agent32 is: 33
+
+
+
+1678514794.927094 _26 localhost 15000 --->Lifetime of agent 15002agent24 is: 12
+
+
+
+1678514794.928519 _26 localhost 15000 --->Lifetime of agent 15001agent11 is: 5
+
+
+
+1678514794.929904 _26 localhost 15000 --->Lifetime of agent agent1 is: 25
+
+
+
+1678514795.189109 _26 localhost 15003 --->15003agent21 resource is increased to 100
+
+
+
+1678514795.19172 _26 localhost 15003 --->15003agent21 lifetime is increased to 15
+
+
+
+1678514796.954885 _26 localhost 15003 --->15000agent11 requested for arrival at Platform 15003 which has no space.
+
+
+
+1678514796.954671 _26 localhost 15000 --->15000agent11 cannot enter the other platform
+
+
+
+1678514796.956335 _26 localhost 15000 --->Intranode Queue Looks like this: 15003agent32, 15002agent24, 15001agent11, agent1, 15000agent11
+
+
+
+1678514798.524818 _26 localhost 15002 --->Lifetime of agent 15003agent33 is: 19
+
+
+
+1678514798.528186 _26 localhost 15002 --->Lifetime of agent 1500215001agent111 is: 14
+
+
+
+1678514798.530926 _26 localhost 15002 --->Lifetime of agent agent2 is: 5
+
+
+
+1678514798.531974 _26 localhost 15002 --->Lifetime of agent 1500215000agent121 is: 8
+
+
+
+1678514798.533362 _26 localhost 15002 --->Lifetime of agent 15000agent12 is: 4
+
+
+
+1678514800.223411 _26 localhost 15003 --->Lifetime of agent 1500315000agent121 is: 18
+
+
+
+1678514800.226674 _26 localhost 15003 --->Lifetime of agent 15003agent21 is: 14
+
+
+
+1678514800.251066 _26 localhost 15003 --->Lifetime of agent 15003agent22 is: 7
+
+
+
+1678514800.252542 _26 localhost 15003 --->Lifetime of agent 150031500315000agent1211 is: 8
+
+
+
+1678514800.254006 _26 localhost 15003 --->Lifetime of agent 150031500315000agent1212 is: 8
+
+
+
+1678514801.621242 _26 localhost 15001 --->Lifetime of agent agent3 is: 1
+
+
+
+1678514801.624287 _26 localhost 15001 --->Lifetime of agent 15000agent14 is: 17
+
+
+
+1678514801.626969 _26 localhost 15001 --->Lifetime of agent 15000agent21 is: 3
+
+
+
+1678514801.629063 _26 localhost 15001 --->Lifetime of agent 15001agent31 is: 8
+
+
+
+1678514801.630626 _26 localhost 15001 --->Lifetime of agent 15001agent32 is: 8
+
+
+
+1678514802.271878 _26 localhost 15003 --->1500315000agent121 cannot enter the other platform
+
+5000 which has no space.
+
+
+
+1678514802.273365 _26 localhost 15003 --->Intranode Queue Looks like this: 15003agent21, 15003agent22, 150031500315000agent1211, 150031500315000agent1212, 1500315000agent121
+
+
+
+1678514803.639455 _26 localhost 15002 --->agent3 requested for arrival at Platform 15002 which has no space.
+
+
+
+1678514804.986762 _26 localhost 15000 --->15001agent11 resource is increased to 100
+
+
+
+1678514804.989477 _26 localhost 15000 --->15001agent11 lifetime is increased to 12
+
+
+
+1678514808.555971 _26 localhost 15002 --->15003agent33 resource is increased to 100
+
+
+
+1678514808.557328 _26 localhost 15002 --->15003agent33 lifetime is increased to 26
+
+
+
+1678514810.010238 _26 localhost 15000 --->Lifetime of agent 15003agent32 is: 32
+
+
+
+1678514810.013686 _26 localhost 15000 --->Lifetime of agent 15002agent24 is: 11
+
+
+
+1678514810.015547 _26 localhost 15000 --->Lifetime of agent 15001agent11 is: 11
+
+
+
+1678514810.01695 _26 localhost 15000 --->Lifetime of agent agent1 is: 24
+
+
+
+1678514810.01792 _26 localhost 15000 --->Lifetime of agent 15000agent11 is: 4
+
+
+
+1678514810.294861 _26 localhost 15003 --->150031500315000agent1211 resource is increased to 100
+
+
+
+1678514810.296297 _26 localhost 15003 --->150031500315000agent1211 lifetime is increased to 15
+
+
+
+1678514813.569073 _26 localhost 15002 --->Lifetime of agent 15003agent33 is: 25
+
+
+
+1678514813.571576 _26 localhost 15002 --->Lifetime of agent 1500215001agent111 is: 13
+
+
+
+1678514813.574583 _26 localhost 15002 --->Lifetime of agent agent2 is: 4
+
+
+
+1678514813.575768 _26 localhost 15002 --->Lifetime of agent 1500215000agent121 is: 7
+
+
+
+1678514813.577079 _26 localhost 15002 --->Lifetime of agent 15000agent12 is: 3
+
+
+
+1678514815.317109 _26 localhost 15003 --->Lifetime of agent 15003agent21 is: 13
+
+
+
+1678514815.319659 _26 localhost 15003 --->Lifetime of agent 15003agent22 is: 6
+
+
+
+1678514815.322264 _26 localhost 15003 --->Lifetime of agent 150031500315000agent1211 is: 14
+
+
+
+1678514815.323496 _26 localhost 15003 --->Lifetime of agent 150031500315000agent1212 is: 7
+
+
+
+1678514815.324539 _26 localhost 15003 --->Lifetime of agent 1500315000agent121 is: 17
+
+
+
+1678514815.590101 _26 localhost 15000 --->15003agent33 requested for arrival at Platform 15000 which has no space.
+
+
+
+1678514815.592315 _26 localhost 15002 --->Intranode Queue Looks like this: 1500215001agent111, agent2, 1500215000agent121, 15000agent12, 15003agent33
+
+
+
+1678514816.668347 _26 localhost 15001 --->Lifetime of agent agent3 is: 1
+
+
+
+1678514816.669437 _26 localhost 15001 --->Lifetime of agent 15000agent14 is: 16
+
+
+
+1678514816.670724 _26 localhost 15001 --->Lifetime of agent 15000agent21 is: 2
+
+
+
+1678514816.671869 _26 localhost 15001 --->Lifetime of agent 15001agent31 is: 7
+
+
+
+1678514816.672931 _26 localhost 15001 --->Lifetime of agent 15001agent32 is: 7
+
+
+
+1678514817.331913 _26 localhost 15002 --->15003agent21 requested for arrival at Platform 15002 which has no space.
+
+
+
+1678514817.333418 _26 localhost 15003 --->Intranode Queue Looks like this: 15003agent22, 150031500315000agent1211, 150031500315000agent1212, 1500315000agent121, 15003agent21
+
+
+
+1678514818.690852 _26 localhost 15000 --->agent3 requested for arrival at Platform 15000 which has no space.
+
+
+
+1678514820.04094 _26 localhost 15000 --->15003agent32 resource is increased to 100
+
+
+
+1678514820.042133 _26 localhost 15000 --->15003agent32 lifetime is increased to 39
+
+
+
+1678514823.612865 _26 localhost 15002 --->1500215001agent111 resource is increased to 100
+
+
+
+1678514823.615711 _26 localhost 15002 --->1500215001agent111 lifetime is increased to 20
+
+
+
+1678514825.062773 _26 localhost 15000 --->Lifetime of agent 15003agent32 is: 38
+
+
+
+1678514825.065991 _26 localhost 15000 --->Lifetime of agent 15002agent24 is: 10
+
+
+
+1678514825.09088 _26 localhost 15000 --->Lifetime of agent 15001agent11 is: 10
+
+
+
+1678514825.092541 _26 localhost 15000 --->Lifetime of agent agent1 is: 23
+
+
+
+1678514825.093897 _26 localhost 15000 --->Lifetime of agent 15000agent11 is: 3
+
+
+
+1678514825.345986 _26 localhost 15003 --->15003agent22 resource is increased to 100
+
+
+
+1678514825.348476 _26 localhost 15003 --->15003agent22 lifetime is increased to 13
+
+
+
+1678514827.113697 _26 localhost 15000 --->15003agent32 cannot enter the other platform
+
+5002 which has no space.
+
+
+
+1678514827.116276 _26 localhost 15000 --->Intranode Queue Looks like this: 15002agent24, 15001agent11, agent1, 15000agent11, 15003agent32
+
+
+
+1678514828.635538 _26 localhost 15002 --->Lifetime of agent 1500215001agent111 is: 19
+
+
+
+1678514828.638762 _26 localhost 15002 --->Lifetime of agent agent2 is: 3
+
+
+
+1678514828.641367 _26 localhost 15002 --->Lifetime of agent 1500215000agent121 is: 6
+
+
+
+1678514828.642916 _26 localhost 15002 --->Lifetime of agent 15000agent12 is: 2
+
+
+
+1678514828.644095 _26 localhost 15002 --->Lifetime of agent 15003agent33 is: 24
+
+
+
+1678514830.382623 _26 localhost 15003 --->Lifetime of agent 15003agent22 is: 12
+
+
+
+1678514830.384435 _26 localhost 15003 --->Lifetime of agent 150031500315000agent1211 is: 13
+
+
+
+1678514830.385618 _26 localhost 15003 --->Lifetime of agent 150031500315000agent1212 is: 6
+
+
+
+1678514830.38652 _26 localhost 15003 --->Lifetime of agent 1500315000agent121 is: 16
+
+
+
+1678514830.387665 _26 localhost 15003 --->Lifetime of agent 15003agent21 is: 12
+
+
+
+1678514830.655717 _26 localhost 15002 --->1500215001agent111 cannot enter the other platform
+
+
+
+1678514830.655261 _26 localhost 15003 --->1500215001agent111 requested for arrival at Platform 15003 which has no space.
+
+
+
+1678514830.658104 _26 localhost 15002 --->Intranode Queue Looks like this: agent2, 1500215000agent121, 15000agent12, 15003agent33, 1500215001agent111
+
+
+
+1678514831.71937 _26 localhost 15001 --->Lifetime of agent agent3 is: 1
+
+
+
+1678514831.722614 _26 localhost 15001 --->Lifetime of agent 15000agent14 is: 15
+
+
+
+1678514831.724152 _26 localhost 15001 --->Lifetime of agent 15000agent21 is: 1
+
+
+
+1678514831.725514 _26 localhost 15001 --->Lifetime of agent 15001agent31 is: 6
+
+
+
+1678514831.726751 _26 localhost 15001 --->Lifetime of agent 15001agent32 is: 6
+
+
+
+1678514833.749898 _26 localhost 15003 --->agent3 requested for arrival at Platform 15003 which has no space.
+
+
+
+1678514835.130845 _26 localhost 15000 --->15001agent11 resource is increased to 100
+
+
+
+1678514835.133783 _26 localhost 15000 --->15001agent11 lifetime is increased to 17
+
+
+
+1678514838.667663 _26 localhost 15002 --->15003agent33 resource is increased to 100
+
+
+
+1678514838.669635 _26 localhost 15002 --->15003agent33 lifetime is increased to 31
+
+
+
+1678514840.161614 _26 localhost 15000 --->Lifetime of agent 15002agent24 is: 9
+
+
+
+1678514840.164612 _26 localhost 15000 --->Lifetime of agent 15001agent11 is: 16
+
+
+
+1678514840.16607 _26 localhost 15000 --->Lifetime of agent agent1 is: 22
+
+
+
+1678514840.189492 _26 localhost 15000 --->Lifetime of agent 15000agent11 is: 2
+
+
+
+1678514840.190876 _26 localhost 15000 --->Lifetime of agent 15003agent32 is: 37
+
+
+
+1678514840.414466 _26 localhost 15003 --->150031500315000agent1211 resource is increased to 100
+
+
+
+1678514840.417552 _26 localhost 15003 --->150031500315000agent1211 lifetime is increased to 20
+
+
+
+1678514842.211356 _26 localhost 15003 --->15002agent24 requested for arrival at Platform 15003 which has no space.
+
+
+
+1678514842.21287 _26 localhost 15000 --->Intranode Queue Looks like this: 15001agent11, agent1, 15000agent11, 15003agent32, 15002agent24
+
+
+
+1678514843.685379 _26 localhost 15002 --->Lifetime of agent agent2 is: 2
+
+
+
+1678514843.68693 _26 localhost 15002 --->Lifetime of agent 1500215000agent121 is: 5
+
+
+
+1678514843.688065 _26 localhost 15002 --->Lifetime of agent 15000agent12 is: 1
+
+
+
+1678514843.689358 _26 localhost 15002 --->Lifetime of agent 15003agent33 is: 30
+
+
+
+1678514843.690479 _26 localhost 15002 --->Lifetime of agent 1500215001agent111 is: 18
+
+
+
+1678514845.449642 _26 localhost 15003 --->Lifetime of agent 15003agent22 is: 11
+
+
+
+1678514845.452578 _26 localhost 15003 --->Lifetime of agent 150031500315000agent1211 is: 19
+
+
+
+1678514845.454226 _26 localhost 15003 --->Lifetime of agent 150031500315000agent1212 is: 5
+
+
+
+1678514845.45587 _26 localhost 15003 --->Lifetime of agent 1500315000agent121 is: 15
+
+
+
+1678514845.457511 _26 localhost 15003 --->Lifetime of agent 15003agent21 is: 11
+
+
+
+1678514846.773065 _26 localhost 15001 --->15000agent21 is purged..
+
+
+
+1678514846.777102 _26 localhost 15001 --->Lifetime of agent agent3 is: 1
+
+
+
+1678514846.77967 _26 localhost 15001 --->Lifetime of agent 15000agent14 is: 14
+
+
+
+1678514846.78081 _26 localhost 15001 --->Lifetime of agent 15001agent31 is: 5
+
+
+
+1678514846.781871 _26 localhost 15001 --->Lifetime of agent 15001agent32 is: 5
+
+
+
+1678514847.472135 _26 localhost 15000 --->15003agent22 requested for arrival at Platform 15000 which has no space.
+
+
+
+1678514847.474275 _26 localhost 15003 --->Intranode Queue Looks like this: 150031500315000agent1211, 150031500315000agent1212, 1500315000agent121, 15003agent21, 15003agent22
+
+
+
+1678514848.805927 _26 localhost 15002 --->agent3 requested for arrival at Platform 15002 which has no space.
+
+
+
+1678514850.22298 _26 localhost 15000 --->15003agent32 resource is increased to 100
+
+
+
+1678514850.225953 _26 localhost 15000 --->15003agent32 lifetime is increased to 44
+
+
+
+1678514853.712793 _26 localhost 15002 --->1500215000agent121 resource is increased to 100
+
+
+
+1678514853.714667 _26 localhost 15002 --->1500215000agent121 lifetime is increased to 12
+
+
+
+1678514855.256746 _26 localhost 15000 --->Lifetime of agent 15001agent11 is: 15
+
+
+
+1678514855.259232 _26 localhost 15000 --->Lifetime of agent agent1 is: 21
+
+
+
+1678514855.261926 _26 localhost 15000 --->Lifetime of agent 15000agent11 is: 1
+
+
+
+1678514855.263279 _26 localhost 15000 --->Lifetime of agent 15003agent32 is: 43
+
+
+
+1678514855.264365 _26 localhost 15000 --->Lifetime of agent 15002agent24 is: 8
+
+
+
+1678514855.504813 _26 localhost 15003 --->15003agent21 resource is increased to 100
+
+
+
+1678514855.50813 _26 localhost 15003 --->15003agent21 lifetime is increased to 18
+
+
+
+1678514858.720221 _26 localhost 15002 --->15000agent12 is purged..
+
+
+
+1678514858.72325 _26 localhost 15002 --->Lifetime of agent agent2 is: 1
+
+
+
+1678514858.724421 _26 localhost 15002 --->Lifetime of agent 1500215000agent121 is: 11
+
+
+
+1678514858.725488 _26 localhost 15002 --->Lifetime of agent 15003agent33 is: 29
+
+
+
+1678514858.74849 _26 localhost 15002 --->Lifetime of agent 1500215001agent111 is: 17
+
+
+
+1678514860.53055 _26 localhost 15003 --->Lifetime of agent 150031500315000agent1211 is: 18
+
+
+
+1678514860.533757 _26 localhost 15003 --->Lifetime of agent 150031500315000agent1212 is: 4
+
+
+
+1678514860.536339 _26 localhost 15003 --->Lifetime of agent 1500315000agent121 is: 14
+
+
+
+1678514860.537387 _26 localhost 15003 --->Lifetime of agent 15003agent21 is: 17
+
+
+
+1678514860.538395 _26 localhost 15003 --->Lifetime of agent 15003agent22 is: 10
+
+
+
+1678514860.769775 _26 localhost 15002 --->agent2 cannot enter the other platform
+
+5000 which has no space.
+
+
+
+1678514860.771289 _26 localhost 15002 --->Intranode Queue Looks like this: 1500215000agent121, 15003agent33, 1500215001agent111, agent2
+
+
+
+1678514861.826652 _26 localhost 15001 --->Lifetime of agent agent3 is: 1
+
+
+
+1678514861.829288 _26 localhost 15001 --->Lifetime of agent 15000agent14 is: 13
+
+
+
+1678514861.831359 _26 localhost 15001 --->Lifetime of agent 15001agent31 is: 4
+
+
+
+1678514861.832808 _26 localhost 15001 --->Lifetime of agent 15001agent32 is: 4
+
+
+
+1678514862.553961 _26 localhost 15002 --->150031500315000agent1211 arrived at Platform 15002 from port 15003
+
+
+
+1678514862.55545 _26 localhost 15002 --->150031500315000agent1211 arrived at Platform 15002
+
+
+
+1678514862.558255 _26 localhost 15003 --->Queue is: 150031500315000agent1212, 1500315000agent121, 15003agent21, 15003agent22 at platform 15003
+
+
+
+1678514863.840759 _26 localhost 15000 --->agent3 requested for arrival at Platform 15000 which has no space.
+
+
+
+1678514865.304879 _26 localhost 15000 --->15001agent11 resource is increased to 100
+
+
+
+1678514865.308015 _26 localhost 15000 --->15001agent11 lifetime is increased to 22
+
+
+
+1678514868.782518 _26 localhost 15002 --->15003agent33 resource is increased to 100
+
+
+
+1678514868.783772 _26 localhost 15002 --->15003agent33 lifetime is increased to 36
+
+
+
+1678514870.327112 _26 localhost 15000 --->15000agent11 is purged..
+
+
+
+1678514870.329688 _26 localhost 15000 --->Lifetime of agent 15001agent11 is: 21
+
+
+
+1678514870.330828 _26 localhost 15000 --->Lifetime of agent agent1 is: 20
+
+
+
+1678514870.331987 _26 localhost 15000 --->Lifetime of agent 15003agent32 is: 42
+
+
+
+1678514870.333284 _26 localhost 15000 --->Lifetime of agent 15002agent24 is: 7
+
+
+
+1678514870.580223 _26 localhost 15003 --->150031500315000agent1212 resource is increased to 100
+
+
+
+1678514870.582576 _26 localhost 15003 --->150031500315000agent1212 lifetime is increased to 11
+
+
+
+1678514872.350422 _26 localhost 15002 --->15001agent11 requested for arrival at Platform 15002 which has no space.
+
+
+
+1678514872.352587 _26 localhost 15000 --->Intranode Queue Looks like this: agent1, 15003agent32, 15002agent24, 15001agent11
+
+
+
+1678514873.609583 _26 localhost 15003 --->1 number of clones made at platform 15003 of 150031500315000agent1212
+
+
+
+1678514873.793275 _26 localhost 15002 --->Lifetime of agent 1500215000agent121 is: 10
+
+
+
+1678514873.796034 _26 localhost 15002 --->Lifetime of agent 15003agent33 is: 35
+
+
+
+1678514873.797506 _26 localhost 15002 --->Lifetime of agent 1500215001agent111 is: 16
+
+
+
+1678514873.798705 _26 localhost 15002 --->Lifetime of agent agent2 is: 1
+
+
+
+1678514873.799823 _26 localhost 15002 --->Lifetime of agent 150031500315000agent1211 is: 17
+
+
+
+1678514875.616294 _26 localhost 15003 --->Lifetime of agent 150031500315000agent1212 is: 10
+
+
+
+1678514875.619376 _26 localhost 15003 --->Lifetime of agent 1500315000agent121 is: 13
+
+
+
+1678514875.621778 _26 localhost 15003 --->Lifetime of agent 15003agent21 is: 16
+
+
+
+1678514875.623772 _26 localhost 15003 --->Lifetime of agent 15003agent22 is: 9
+
+
+
+1678514875.62497 _26 localhost 15003 --->Lifetime of agent 15003150031500315000agent12121 is: 9
+
+
+
+1678514875.808848 _26 localhost 15002 --->1500215000agent121 cannot enter the other platform
+
+5003 which has no space.
+
+
+
+1678514875.810713 _26 localhost 15002 --->Intranode Queue Looks like this: 15003agent33, 1500215001agent111, agent2, 150031500315000agent1211, 1500215000agent121
+
+
+
+1678514876.876247 _26 localhost 15001 --->Lifetime of agent agent3 is: 1
+
+
+
+1678514876.878562 _26 localhost 15001 --->Lifetime of agent 15000agent14 is: 12
+
+
+
+1678514876.879988 _26 localhost 15001 --->Lifetime of agent 15001agent31 is: 3
+
+
+
+1678514876.881631 _26 localhost 15001 --->Lifetime of agent 15001agent32 is: 3
+
+
+
+1678514878.895038 _26 localhost 15003 --->agent3 requested for arrival at Platform 15003 which has no space.
+
+
+
+1678514880.372058 _26 localhost 15000 --->15003agent32 resource is increased to 100
+
+
+
+1678514880.375179 _26 localhost 15000 --->15003agent32 lifetime is increased to 49
+
+
+
+1678514883.387915 _26 localhost 15000 --->1 number of clones made at platform 15000 of agent1
+
+
+
+1678514883.824163 _26 localhost 15002 --->1500215001agent111 resource is increased to 100
+
+
+
+1678514883.82753 _26 localhost 15002 --->1500215001agent111 lifetime is increased to 23
+
+
+
+1678514885.395108 _26 localhost 15000 --->Lifetime of agent agent1 is: 19
+
+
+
+1678514885.398198 _26 localhost 15000 --->Lifetime of agent 15003agent32 is: 48
+
+
+
+1678514885.399459 _26 localhost 15000 --->Lifetime of agent 15002agent24 is: 6
+
+
+
+1678514885.400538 _26 localhost 15000 --->Lifetime of agent 15001agent11 is: 20
+
+
+
+1678514885.401627 _26 localhost 15000 --->Lifetime of agent 15000agent15 is: 9
+
+
+
+1678514885.651203 _26 localhost 15003 --->15003agent21 resource is increased to 100
+
+
+
+1678514885.654239 _26 localhost 15003 --->15003agent21 lifetime is increased to 23
+
+
+
+1678514887.420322 _26 localhost 15000 --->agent1 cannot enter the other platform
+
+5003 which has no space.
+
+
+
+1678514887.421717 _26 localhost 15000 --->Intranode Queue Looks like this: 15003agent32, 15002agent24, 15001agent11, 15000agent15, agent1
+
+
+
+1678514888.848093 _26 localhost 15002 --->Lifetime of agent 15003agent33 is: 34
+
+
+
+1678514888.849444 _26 localhost 15002 --->Lifetime of agent 1500215001agent111 is: 22
+
+
+
+1678514888.850523 _26 localhost 15002 --->Lifetime of agent agent2 is: 1
+
+
+
+1678514888.851627 _26 localhost 15002 --->Lifetime of agent 150031500315000agent1211 is: 16
+
+
+
+1678514888.852804 _26 localhost 15002 --->Lifetime of agent 1500215000agent121 is: 9
+
+
+
+1678514890.68736 _26 localhost 15003 --->Lifetime of agent 150031500315000agent1212 is: 9
+
+
+
+1678514890.690808 _26 localhost 15003 --->Lifetime of agent 1500315000agent121 is: 12
+
+
+
+1678514890.692874 _26 localhost 15003 --->Lifetime of agent 15003agent21 is: 22
+
+
+
+1678514890.694415 _26 localhost 15003 --->Lifetime of agent 15003agent22 is: 8
+
+
+
+1678514890.695689 _26 localhost 15003 --->Lifetime of agent 15003150031500315000agent12121 is: 8
+
+
+
+1678514891.933616 _26 localhost 15001 --->Lifetime of agent agent3 is: 1
+
+
+
+1678514891.935642 _26 localhost 15001 --->Lifetime of agent 15000agent14 is: 11
+
+
+
+1678514891.93713 _26 localhost 15001 --->Lifetime of agent 15001agent31 is: 2
+
+
+
+1678514891.938625 _26 localhost 15001 --->Lifetime of agent 15001agent32 is: 2
+
+
+
+1678514892.713138 _26 localhost 15000 --->150031500315000agent1212 requested for arrival at Platform 15000 which has no space.
+
+
+
+1678514892.715331 _26 localhost 15003 --->Intranode Queue Looks like this: 1500315000agent121, 15003agent21, 15003agent22, 15003150031500315000agent12121, 150031500315000agent1212
+
+
+
+1678514893.952136 _26 localhost 15002 --->agent3 requested for arrival at Platform 15002 which has no space.
+
+
+
+1678514895.448537 _26 localhost 15000 --->15001agent11 resource is increased to 100
+
+
+
+1678514895.449671 _26 localhost 15000 --->15001agent11 lifetime is increased to 27
+
+
+
+1678514898.896707 _26 localhost 15002 --->15003agent33 resource is increased to 100
+
+
+
+1678514898.89854 _26 localhost 15002 --->15003agent33 lifetime is increased to 41
+
+
+
+1678514900.457742 _26 localhost 15000 --->Lifetime of agent 15003agent32 is: 47
+
+
+
+1678514900.460779 _26 localhost 15000 --->Lifetime of agent 15002agent24 is: 5
+
+
+
+1678514900.462651 _26 localhost 15000 --->Lifetime of agent 15001agent11 is: 26
+
+
+
+1678514900.464253 _26 localhost 15000 --->Lifetime of agent 15000agent15 is: 8
+
+
+
+1678514900.46545 _26 localhost 15000 --->Lifetime of agent agent1 is: 18
+
+
+
+1678514900.742954 _26 localhost 15003 --->1500315000agent121 resource is increased to 100
+
+
+
+1678514900.74594 _26 localhost 15003 --->1500315000agent121 lifetime is increased to 19
+
+
+
+1678514903.909949 _26 localhost 15002 --->Lifetime of agent 15003agent33 is: 40
+
+
+
+1678514903.911504 _26 localhost 15002 --->Lifetime of agent 1500215001agent111 is: 21
+
+
+
+1678514903.912373 _26 localhost 15002 --->Lifetime of agent agent2 is: 1
+
+
+
+1678514903.913444 _26 localhost 15002 --->Lifetime of agent 150031500315000agent1211 is: 15
+
+
+
+1678514903.914616 _26 localhost 15002 --->Lifetime of agent 1500215000agent121 is: 8
+
+
+
+1678514905.781668 _26 localhost 15003 --->Lifetime of agent 1500315000agent121 is: 18
+
+
+
+1678514905.784113 _26 localhost 15003 --->Lifetime of agent 15003agent21 is: 21
+
+
+
+1678514905.786423 _26 localhost 15003 --->Lifetime of agent 15003agent22 is: 7
+
+
+
+1678514905.787988 _26 localhost 15003 --->Lifetime of agent 15003150031500315000agent12121 is: 7
+
+
+
+1678514905.789386 _26 localhost 15003 --->Lifetime of agent 150031500315000agent1212 is: 8
+
+
+
+1678514915.826109 _26 localhost 15003 --->15003agent21 resource is increased to 100
+
+
+
+1678514915.829057 _26 localhost 15003 --->15003agent21 lifetime is increased to 28
+
