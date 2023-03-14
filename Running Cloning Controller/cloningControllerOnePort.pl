@@ -78,6 +78,8 @@ agent_max_resource(100).
 agent_min_resource(10).
 
 :-dynamic global_mutex/1.
+:-dynamic posted_lock/1.
+:-dynamic posted_lock_dq/1.
 
 :-dynamic satisfied_need/1.
 
@@ -90,6 +92,14 @@ start_clonning_controller(P):-
                 mutex_create(GMID),
                 assert(global_mutex(GMID)),
 
+                
+                mutex_create(GPOST),
+                assert(posted_lock(GPOST)),
+                
+                
+                mutex_create(GPOSTT),
+                assert(posted_lock_dq(GPOSTT)),
+
                 set_log_server(localhost, 6666),
 
                 q_manager(P),
@@ -99,7 +109,7 @@ start_clonning_controller(P):-
                 !.
 
 
-start_queue_manager(EP,DP):- write('start_queue_manager Failed'),!.
+start_queue_manager(P):- write('start_queue_manager Failed'),!.
 
 init_need(N):-
         retractall(need(_)),
@@ -112,12 +122,15 @@ q_manager(P):-
 
 q_manager(P):- write('q_manager failed'),!.
 
-:- dynamic q_manager_handle/3.
 
-q_manager_handle(_,(IP,NP),recv_agent(X)):-
-                                            
-                global_mutex(GMID),
-                mutex_lock(GMID),
+:- dynamic q_manager_handle_thread/3.
+
+q_manager_handle_thread(ID,(IP,NP),X):-
+                
+                writeln('Atleast till qmht'),
+
+                posted_lock(GPOST),
+                mutex_lock(GPOST),
 
                 writeln('Request received for the arrival of agent':X),
                 writeln('Arrival of agent from Port ':NP),
@@ -164,9 +177,20 @@ q_manager_handle(_,(IP,NP),recv_agent(X)):-
                         )
                 ),
                 
-                mutex_unlock(GMID),
-                sleep(2),
-!.
+                mutex_unlock(GPOST),
+                !.
+
+q_manager_handle_thread(ID,(IP,NP),X):-
+                writeln('Q_maanger_handle_thread failed !!'), !.
+
+:- dynamic q_manager_handle/3.
+
+q_manager_handle(_,(IP,NP),recv_agent(X)):-
+
+                writeln('Arrived q_manager_handle atleast'),
+                thread_create(q_manager_handle_thread(ID, (IP, NP), X),ID,[detached(true)]),
+                
+                !.
                 
 q_manager_handle(guid,(IP,P),recv_agent(X)):- write('Q-manager handler failed!!'),!.
 
@@ -317,8 +341,10 @@ clone_if_necessary(GUID):-
                 )
         ),
 
+        
         mutex_unlock(GMID),
         
+
         !.
 
 clone_if_necessary(GUID):- writeln('clone_if_necessary/1 Failed'),!.
@@ -635,26 +661,29 @@ dq_manager(P):- writeln('dq_manager Failed'),!.
 % DQ-Manager handler to handle request and response to transfer an agent
 % at the top of the intranode queue onto the next node.
 
-:- dynamic dq_manager_handle/3.
-% To tranfer an agent to the destination after an ACK is received.
-dq_manager_handle(_,(IP,P),ack(X)):- 
 
-                global_mutex(GMID),
-                mutex_lock(GMID),
+:-dynamic dq_manager_thread_ack/3.
+dq_manager_thread_ack(ID, (IP, P), X):-
+
+                posted_lock_dq(GPOSTT),
+                mutex_lock(GPOSTT),
+
                 writeln('ACK by the receiver':P:X),
                 initiate_migration(X, P),
                 dq_manager_handler(_,(IP,P),X),
-                mutex_unlock(GMID),
-                sleep(2),
+        
+                mutex_unlock(GPOSTT),
                 !.
 
-dq_manager_handle(_,(IP,P),ack(X)):- writeln('dq_manager_handle ACK Failed'),!.
+dq_manager_thread_ack(ID, (IP, P), X):-
+                writeln('Dq_manager_thread_ack failed !!'), !.
 
-% If the received response from the destination is an NAK.
-dq_manager_handle(_,(IP,P),nack(X)):-
 
-                global_mutex(GMID),
-                mutex_lock(GMID),
+:-dynamic dq_manager_thread_nak/3.
+dq_manager_thread_nak(ID, (IP, P), X):-
+
+                posted_lock_dq(GPOSTT),
+                mutex_lock(GPOSTT),
 
                 writeln('Migration Denied (NAK) by the receiver'),
                 
@@ -664,15 +693,36 @@ dq_manager_handle(_,(IP,P),nack(X)):-
 
                 migrate_typhlet(X),
 
-                mutex_unlock(GMID),
-                sleep(2),
+                mutex_unlock(GPOSTT),
+
+                !.
+
+dq_manager_thread_nak(ID, (IP, P), X):-
+                writeln('Dq_manager_thread_nak failed !!'), !.
+
+
+:- dynamic dq_manager_handle/3.
+% To tranfer an agent to the destination after an ACK is received.
+dq_manager_handle(_,(IP,P),ack(X)):- 
+
+                writeln('Arrived dq_manager_handle_ack atleast'),
+                thread_create(dq_manager_thread_ack(ID, (IP, P), X),ID,[detached(true)]),
+                !.
+
+dq_manager_handle(_,(IP,P),ack(X)):- writeln('dq_manager_handle ACK Failed'),!.
+
+% If the received response from the destination is an NAK.
+dq_manager_handle(_,(IP,P),nack(X)):-
+
+                writeln('Arrived dq_manager_handle_nak atleast'),
+                thread_create(dq_manager_thread_nak(ID, (IP, P), X),ID,[detached(true)]),
                 !.
 
 dq_manager_handle(_,(IP,P),nack(X)):- writeln('dq_manager_handle NAK Failed'),!.
 
 
 
-
+:-dynamic dq_manager_handler/3.
 % To release agent from the intranode queue.
 dq_manager_handler(_,(IP,NP),Agent):-
 
@@ -703,8 +753,10 @@ dq_manager_handler(_,(IP,NP),Agent):-
                 atom_concat(W2, Str4, W3),
                 send_log(_, W3),
 
-                writeln('Printing decremented lifetimes...'),
         !.
+
+dq_manager_handler(_,(IP,NP),Agent):-
+        writeln('Dq_manager_handler failed !!'), !.
 
 %leave_queue/3 contacts the destination of the agent whether it can move there or not.
 
@@ -720,6 +772,7 @@ leave_queue(Agent,NIP,NPort):-
                 writeln('Transit request sent':Agent:NP),
 
                 mutex_unlock(GMID),
+
                 !.
 
 leave_queue(Agent,IP,Port):- writeln('leave_queue Failed'),!.
@@ -747,7 +800,6 @@ release_agent:-
                                         (
                                                 intranode_queue([Agent|Tail]), 
                                                 clone_if_necessary(Agent), 
-                                                sleep(2), 
 
                                                 global_mutex(GMID),
                                                 mutex_lock(GMID),
@@ -756,7 +808,6 @@ release_agent:-
                                                 showlifetime, 
                                                 
                                                 mutex_unlock(GMID),
-                                                sleep(2),
 
                                                 intranode_queue(Ileave), 
                                                 length(Ileave,Lenleave),
@@ -764,8 +815,8 @@ release_agent:-
                                                 (
                                                         (Lenleave > 0)->
                                                         (
-                                                                leave_queue(Agent, localhost, NP),
-                                                                sleep(2)
+                                                                intranode_queue([Newagent|Newtail]),
+                                                                leave_queue(Newagent, localhost, NP)
                                                         );
                                                         (
                                                                 nothing
@@ -796,17 +847,15 @@ release_agent:-
                                         (Len > 0)->
                                         (
                                                 intranode_queue([Agent|Tail]),  
-                                                clone_if_necessary(Agent), 
-                                                sleep(2), 
+                                                clone_if_necessary(Agent),
 
                                                 global_mutex(GMID),
                                                 mutex_lock(GMID),
                                                 
                                                 decrement_lifetime, 
                                                 showlifetime,
-                                                
-                                                mutex_unlock(GMID),
-                                                sleep(2)
+                                        
+                                                mutex_unlock(GMID)
                                         )
 
                                         ;
@@ -949,7 +998,6 @@ decrement_lifetime:-
         update_intranode_queue(Q),
         retractall(tmp_q(_)),
         assert(tmp_q([])),
-        %sleep(3),
         %writeln('Decrement lifetime of ': I),
         do_decr(I),
         intranode_queue(Ii),
@@ -965,8 +1013,6 @@ decrement_lifetime:-
         %writeln('New Iii here ' :Iii),
         retractall(tmp_q(_)),
         assert(tmp_q([])),
-
-        %sleep(5),
         
         agent_list_new(AGV),
         writeln('Aglist ': AGV),
@@ -997,6 +1043,11 @@ see_if_satisfy(Needsat):-
         writeln('See if satisfy called..':Needsat),
 
         intranode_queue(I),
+        writeln('See_if_satisfy queue':I),
+
+        agent_list_new(AGV),
+        writeln('See_if_satisfy Aglist ': AGV),
+
         length(I, Len),
         satisfied_need(SSN),
         writeln('This is SSN ':SSN),
@@ -1027,9 +1078,17 @@ see_if_satisfy(Needsat):-
 timer_release(ID, N):-
 
         ((N =:= 0)->(sleep(60));(nothing)),
+        
+        writeln('timer_release called..'),
+        
+        
+        posted_lock(GPOST),
+        posted_lock_dq(GPOSTT),
+
+        mutex_lock(GPOST),
+        mutex_lock(GPOSTT),
 
         writeln('Thread ID ':ID),
-        sleep(3),
 
         satisfied_need(SN), 
         need(Need),
@@ -1057,13 +1116,14 @@ timer_release(ID, N):-
         need(Needsat),
         see_if_satisfy(Needsat),
         
-        sleep(3),
         release_agent,
-        sleep(3),
+
+        mutex_unlock(GPOSTT),
+        sleep(5),
+        mutex_unlock(GPOST),
+        sleep(5),
 
         N1 is N + 1,
         timer_release(ID, N1),
         
         !.
-
-
