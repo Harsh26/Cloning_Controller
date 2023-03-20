@@ -1,5 +1,5 @@
 
 
-begin:-
-    remover(3,[1,2,3,4,3],Res),
-    writeln('List ':Res).
+node2:-
+    consult('platform.pl'),
+    start_tartarus(localhost, 6666,1111).

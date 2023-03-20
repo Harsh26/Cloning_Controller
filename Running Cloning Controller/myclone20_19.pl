@@ -16,7 +16,9 @@ starttar:-
     consult("platform.pl"), 
     start_tartarus(localhost,15019,30),
     retractall(need_train(_)),
-    assert(need_train([2,1])).
+    assert(need_train([2,1])),
+   retractall(platform_number(_)),
+   assert(platform_number(19)).
 
 attachneighbour:-
     assert(node_neighbours([15001,15003,15007,15012,15005,15002,15014,15017,15008,15010,15013,15000,15004,15015,15018,15016,15006,15011,15009])).

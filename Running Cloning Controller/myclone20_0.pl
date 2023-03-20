@@ -9,16 +9,23 @@
 :-dynamic agent_inherit/2.
 :-dynamic need_train/1.
 
+
 :-dynamic parent/1.
 parent('P').
 
 starttar:-
    consult("platform.pl"), 
+   
    open('server_log.txt',write,X),
    close(X),
+   open('data.txt', write, Stream),
+   close(Stream),
+
    start_tartarus(localhost,15000,30),
    retractall(need_train(_)),
-   assert(need_train([1,3])).
+   assert(need_train([1,3])),
+   retractall(platform_number(_)),
+   assert(platform_number(0)).
 
 attachneighbour:-
    retractall(node_neighbours(_)),
