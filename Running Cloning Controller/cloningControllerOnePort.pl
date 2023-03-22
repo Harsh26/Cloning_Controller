@@ -30,7 +30,7 @@ ack_q([]).
 transit_req(0).
 
 :-dynamic queue_length/1.
-queue_length(5).
+queue_length(4).
 
 :-dynamic clone_lifetime/1.
 clone_lifetime(10).
@@ -39,7 +39,7 @@ clone_lifetime(10).
 clone_resource(10).
 
 :-dynamic queue_threshold/1.
-queue_threshold(5).
+queue_threshold(4).
 
 :-dynamic q_monitor_steptime/1.
 q_monitor_steptime(1003).
@@ -60,10 +60,10 @@ service_reward(1).
 tau_c(0.1).
 
 :-dynamic tau_r/1.
-tau_r(100).
+tau_r(5).
 
 :-dynamic sigma/1.
-sigma(7).
+sigma(3).
 
 :-dynamic child/1.
 child('C').
@@ -80,7 +80,7 @@ agent_min_resource(10).
 :-dynamic global_mutex/1.
 :-dynamic posted_lock/1.
 :-dynamic posted_lock_dq/1.
-
+:-dynamic platform_number/1.
 :-dynamic satisfied_need/1.
 
 
@@ -157,23 +157,11 @@ q_manager_handle_thread(ID,(IP,NP),X):-
                                 writeln('Ack Queue':Nw_Ack_Q),
                                 update_ack_queue(Nw_Ack_Q),
                                 movedagent(_,(localhost, NP), X)
-
-                                ,
-                                platform_port(Q),
-                                Str1 = X, Str2 = ' arrived at Platform ', Str3 = Q, 
-                                atom_concat(Str1, Str2, W1),
-                                atom_concat(W1, Str3, W2),
-                                send_log(_, W2)
                         )
                         ;
                         (
                                 agent_post(platform,(IP,NP),[dq_manager_handle,_,(localhost,QP),nack(X)]),
-                                writeln('No space is available in queue. NAK sent...'),
-                                Strr1 = X, Strr2 = ' requested for arrival at Platform ', Strr3 = QP, Strr4 = ' which has no space.',
-                                atom_concat(Strr1, Strr2, Wr1),
-                                atom_concat(Wr1, Strr3, Wr2),
-                                atom_concat(Wr2, Strr4, Wr3),
-                                send_log(_, Wr3)
+                                writeln('No space is available in queue. NAK sent...')
                         )
                 ),
                 
@@ -209,17 +197,11 @@ migrate_typhlet(GUID):-
                  (member(GUID,I)->
                  (dequeue(GUID,I,In),enqueue(GUID,In,Inew));
                  (enqueue(GUID,I,Inew), platform_port(QP)
-                 ,Str1 = GUID, Str2 = ' started at ' , atom_number(Str, QP) , atom_concat(Str1, Str2, W1), atom_concat(W1, Str, W2),send_log(_, W2)
-                 )
+                  )
                  ),
 
                  update_intranode_queue(Inew),
                  writeln('Agent added to the queue':Inew),
-                 
-                 Str3 = 'Intranode Queue Looks like this: ',
-                 atomic_list_concat(Inew, ', ', Str4),
-                 atom_concat(Str3, Str4, W3),
-                 send_log(_, W3),
 
                  ack_q(ACK_Q),
                 (
@@ -250,8 +232,6 @@ update_intranode_queue(Inew):- write('update_intranode_queue Failed'),!.
 % update_ack_queue/1 updates the ack_queue with the new list
 :- dynamic update_ack_queue/1.
 update_ack_queue(X):-
-                        %node_info(NodeNm,_,_),
-                %(write(NodeNm),write(','),write('Ack Queue updated'),write(X))~>D,send_log(D),
                         retractall(ack_q(_)),
                         asserta(ack_q(X)),
                         !.
@@ -267,19 +247,9 @@ initiate_migration(GUID, NP):-
                 writeln(' To ':NP),
 
                 platform_port(Q),
-
-                Str1 = GUID, Str2 = ' leaving platform ', Str3 = Q, Str4 = ' to platform ', Str5 = NP,  
-                atom_concat(Str1, Str2, W1),
-                atom_concat(W1, Str3, W2),
-                atom_concat(W2, Str4, W3),
-                atom_concat(W3, Str5, W4),
-                send_log(_, W4),
-
                 
                 intranode_queue(I),
                 writeln('Initiate_migration Successful!!!, updated intranode queue:':I),
-
-                send_log(_, 'Initiate_migration Successful!!!'),
         
         !.
 
@@ -329,14 +299,7 @@ clone_if_necessary(GUID):-
                         deduct_clonal_resource(GUID,N),
 
                         agent_resource(GUID, Rafter), 
-                        writeln('Left Resource ':Rafter), 
-        
-                        Str1 = N, Str2 = ' number of clones made at platform ', Str3 = QP, Str4 = ' of ', Str5 = GUID,
-                        atom_concat(Str1, Str2, W1),
-                        atom_concat(W1, Str3, W2),
-                        atom_concat(W2, Str4, W3),
-                        atom_concat(W3, Str5, W4),
-                        send_log(_, W4)
+                        writeln('Left Resource ':Rafter)
 
                 )
         ),
@@ -420,7 +383,7 @@ create_clones(GUID,N):-
                 
                 platform_port(P),
                 
-                agent_clone(GUID,(localhost,P),Clone_ID),
+                agent_clone(GUID,(localhost,P),Clone_ID), sleep(1),
                 writeln('Clone ID ': Clone_ID),
 
                 intranode_queue(Q),
@@ -506,13 +469,6 @@ movedagent(_,(IP,NP), X):-
         writeln('Agent arrived from ':NP),
         platform_port(Thisport),
 
-        Str1 = X, Str2 = ' arrived at Platform ', Str3 = Thisport, Str4 = ' from port ', Str5 = NP, 
-        atom_concat(Str1, Str2, W1),
-        atom_concat(W1, Str3, W2),
-        atom_concat(W2, Str4, W3),
-        atom_concat(W3, Str5, W4),
-        send_log(_, W4),
-
         writeln('This executed..'),
         intranode_queue(I),
         writeln('This also executed..'),
@@ -537,11 +493,6 @@ update_lifetime(GUID):-
         assert(agent_lifetime(GUID, N)),
         agent_lifetime(GUID, X),
         writeln('Updated lifetime':X),
-        
-        Str1 = GUID, Str2 = ' lifetime is increased to ', Str3 = X, 
-        atom_concat(Str1, Str2, W1),
-        atom_concat(W1, Str3, W2),
-        send_log(_, W2),
         !.
 
 update_lifetime(GUID):- writeln('Update lifetime failed!!'),!.
@@ -587,10 +538,10 @@ update_resource(GUID):-
         %writeln('Mul32 is ':Mul32),
 
         %((Rav >= 1) -> ((P < 4) -> writeln('hihi') ; writeln('byby');nothing)),
-
+        
         (
-            ((Rav >= 1), (P =< 1)) -> (Rn is Rav + Mul11 + Mul12) ;
-            ((Rav < 1), (P < 1)) -> (Rn is Rav + Tc + Mul21) ;
+            ((Rav >= Rmax/2), (P =< 1)) -> (Rn is Rav + Mul11 + Mul12) ;
+            ((Rav < Rmax/2), (P < 1)) -> (Rn is Rav + Tc + Mul21) ;
             ((P > 1)) -> (Rn is Rav +  Mul31 + Mul32)
         ),
 
@@ -599,11 +550,6 @@ update_resource(GUID):-
         set_resource(GUID, Rf),
         agent_resource(GUID, X),
         writeln('Value of new resource ': X),
-
-        Str1 = GUID, Str2 = ' resource is increased to ', Str3 = X, 
-        atom_concat(Str1, Str2, W1),
-        atom_concat(W1, Str3, W2),
-        send_log(_, W2),
 
         !.
 
@@ -686,10 +632,6 @@ dq_manager_thread_nak(ID, (IP, P), X):-
                 mutex_lock(GPOSTT),
 
                 writeln('Migration Denied (NAK) by the receiver'),
-                
-                Str1 = X, Str2 = ' cannot enter the other platform', 
-                atom_concat(Str1, Str2, W1),
-                send_log(_, W1),
 
                 migrate_typhlet(X),
 
@@ -745,13 +687,6 @@ dq_manager_handler(_,(IP,NP),Agent):-
                 update_intranode_queue(In),
                 intranode_queue(Ifinal),
                 writeln('Agents now in queue ':Ifinal), 
-
-                Str1 = 'Queue is: ', atomic_list_concat(Ifinal, ', ', Str2), Str3 = ' at platform ', Str4 = PP, 
-                
-                atom_concat(Str1, Str2, W1),
-                atom_concat(W1, Str3, W2),
-                atom_concat(W2, Str4, W3),
-                send_log(_, W3),
 
         !.
 
@@ -891,12 +826,6 @@ show_lf([H|T]):-
         write(' whose type is ':Typ),
         writeln('\n'),
 
-        Str1 = 'Lifetime of agent ', Str2 = H, Str3 = ' is: ', Str4 = L, 
-        atom_concat(Str1, Str2, W1),
-        atom_concat(W1, Str3, W2),
-        atom_concat(W2, Str4, W3),
-        send_log(_, W3),
-
         show_lf(T),
         
         !.
@@ -927,9 +856,7 @@ del_zero_lifetime([H|T]):-
 
         agent_lifetime(H, Li),
 
-        ((Li =< 0)->(writeln('Agent Purged ':H),purge_agent(H), Str1 = H, Str2 = ' is purged..', atom_concat(Str1, Str2, W1),
-        
-        send_log(_, W1));(enqueue(H, Q, Qn), retractall(tmp_q(_)), assert(tmp_q(Qn)))),
+        ((Li =< 0)->(writeln('Agent Purged ':H),purge_agent(H),sleep(1) );(enqueue(H, Q, Qn), retractall(tmp_q(_)), assert(tmp_q(Qn)))),
 
         del_zero_lifetime(T),
 
@@ -956,11 +883,6 @@ do_decr([H|T]):-
         %writeln('do_decr end'),
         do_decr(T),
         !.
-
-        %((N =< 0)-> (dequeue(H,I,In), purge_agent(H), update_intranode_queue(In), writeln('Agent removed from the queue, updated one ':In), do_decr(In)) 
-        %  ; (retractall(agent_lifetime(H, _)),assert(agent_lifetime(H, N)), do_decr(T) )),%dequeue(H,I,In), enqueue(H, In, Inn), update_intranode_queue(Inn), do_decr(Inn))),
-        %(retractall(agent_lifetime(H, _)),assert(agent_lifetime(H, N)), dequeue(H,I,In), enqueue(H, In, Inn), update_intranode_queue(Inn) )),
-         
 
 :-dynamic member_check/1.
 
@@ -990,14 +912,14 @@ member_check([H|T]):-
 decrement_lifetime:-
 
         intranode_queue(I),
-        agent_list_new(Aglist),
+        %agent_list_new(Aglist),
         %writeln('Aglist ': Aglist),
-        member_check(I),
-        tmp_q(Q),
+        %member_check(I),
+        %tmp_q(Q),
         %writeln('Q here ' :Q),
-        update_intranode_queue(Q),
-        retractall(tmp_q(_)),
-        assert(tmp_q([])),
+        %update_intranode_queue(Q),
+        %retractall(tmp_q(_)),
+        %assert(tmp_q([])),
         %writeln('Decrement lifetime of ': I),
         do_decr(I),
         intranode_queue(Ii),
@@ -1016,6 +938,10 @@ decrement_lifetime:-
         
         agent_list_new(AGV),
         writeln('Aglist ': AGV),
+
+        
+        list_agents(Res),
+        writeln('Agents truly here ':Res),
         !.
 
 :-dynamic need_a_member/2.
@@ -1077,8 +1003,31 @@ see_if_satisfy(Needsat):-
 
 timer_release(ID, N):-
 
-        ((N =:= 0)->(sleep(60));(nothing)),
-        
+        platform_number(PNR),
+        WT is 60 - PNR,
+
+        (
+                (N =:= 0)->
+                        (
+                                sleep(WT)
+                        )
+                        ;
+                        (
+                                (
+                                        (N =:= 210)->
+                                                (
+                                                        halt
+                                                )
+                                                ;
+                                                (
+                                                        nothing
+                                                )
+                                )
+                        )
+        ),
+
+        writeln('Iteration.. ':N),
+
         writeln('timer_release called..'),
         
         
@@ -1114,7 +1063,47 @@ timer_release(ID, N):-
         );(nothing)),
         
         need(Needsat),
+
         see_if_satisfy(Needsat),
+        satisfied_need(SAN),
+
+        (
+                (SAN =:= 1)->
+                        (
+                                intranode_queue(Ilog),
+                                length(Ilog,Lenlog),
+
+                                writeln('Need of Platform satisfied!! At Time Point ':N),
+                                
+                                Str1 = N, Str2 = ' ', Str3 = '1', Str4 = ' ', Str5 = Lenlog,
+
+                                atom_concat(Str1, Str2, W1), 
+                                atom_concat(W1, Str3, W2),
+                                atom_concat(W2, Str4, W3),
+                                atom_concat(W3, Str5, W4),
+                                
+                                %write(Stream, W4), nl(Stream)
+                                send_log(_, W4)
+                        )
+                        ;
+                        (
+                                intranode_queue(Ilog),
+                                length(Ilog,Lenlog),
+
+                                writeln('Need of Platform NOT satisfied at time point ':N),
+
+                                
+                                Str1 = N, Str2 = ' ', Str3 = '0', Str4 = ' ', Str5 = Lenlog,
+
+                                atom_concat(Str1, Str2, W1), 
+                                atom_concat(W1, Str3, W2),
+                                atom_concat(W2, Str4, W3),
+                                atom_concat(W3, Str5, W4),
+                                
+                                %write(Stream, W4), nl(Stream)
+                                send_log(_,W4)
+                        )
+        ),
         
         release_agent,
 
