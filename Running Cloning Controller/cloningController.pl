@@ -61,7 +61,7 @@ service_reward(1).
 tau_c(0.1).
 
 :-dynamic tau_r/1.
-tau_r(100).
+tau_r(30).
 
 :-dynamic sigma/1.
 sigma(7).
@@ -1018,6 +1018,7 @@ decrement_lifetime:-
         
         agent_list_new(AGV),
         writeln('Aglist ': AGV),
+
         !.
 
 :-dynamic need_a_member/2.
@@ -1093,16 +1094,7 @@ timer_release(ID, N):-
                         )
         ),
 
-        (
-                (N =:= 210)->
-                        (
-                                halt
-                        )
-                        ;
-                        (
-                                nothing
-                        )
-        ),
+        
         
         writeln('timer_release called..'),
         

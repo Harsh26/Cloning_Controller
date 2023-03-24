@@ -1054,7 +1054,47 @@ timer_release(ID, N):-
         );(nothing)),
         
         need(Needsat),
+
         see_if_satisfy(Needsat),
+        satisfied_need(SAN),
+
+        (
+                (SAN =:= 1)->
+                        (
+                                intranode_queue(Ilog),
+                                length(Ilog,Lenlog),
+                
+                                writeln('Need of Platform satisfied!! At Time Point ':N),
+                                
+                                Str1 = N, Str2 = ' ', Str3 = '1', Str4 = ' ', Str5 = Lenlog,
+
+                                atom_concat(Str1, Str2, W1), 
+                                atom_concat(W1, Str3, W2),
+                                atom_concat(W2, Str4, W3),
+                                atom_concat(W3, Str5, W4),
+                                
+                                %write(Stream, W4), nl(Stream)
+                                send_log(_, W4)
+                        )
+                        ;
+                        (
+                                intranode_queue(Ilog),
+                                length(Ilog,Lenlog),
+
+                                writeln('Need of Platform NOT satisfied at time point ':N),
+
+                                
+                                Str1 = N, Str2 = ' ', Str3 = '0', Str4 = ' ', Str5 = Lenlog,
+
+                                atom_concat(Str1, Str2, W1), 
+                                atom_concat(W1, Str3, W2),
+                                atom_concat(W2, Str4, W3),
+                                atom_concat(W3, Str5, W4),
+                                
+                                %write(Stream, W4), nl(Stream)
+                                send_log(_,W4)
+                        )
+        ),
         
         release_agent,
 

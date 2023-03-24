@@ -24,7 +24,7 @@ attachneighbour:-
     assert(node_neighbours([15010,15006,15014,15003,15013,15017,15001,15018,15016,15005,15008,15019,15011,15015,15002,15004,15009,15012,15000])).
 
 startcontroller:-
-    consult("cloningController.pl"),
+    consult("cloningControllerOnePort.pl"),
     start_clonning_controller(15007),
     init_need(0),
     assert(satisfied_need(0)),

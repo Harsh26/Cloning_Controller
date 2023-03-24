@@ -858,7 +858,7 @@ execute_agent(Agent_name,(Ip,Port),Handler):-
 agent_execute(Agent_name,(Ip,Port),Handler):-                                           %% create agent +Agent_name +Handler +Ip +Port
         (agent_GUID(Agent_name,Handler,(Ip,Port))->
 				Functor =.. [Handler,Agent_name,(Ip,Port),main],                        %% create Functor with handler as predicate name, and arguments as +Agent_new_name, +Ip, +Port
-				%writeln(Functor),
+				%writeln('Functor ':Functor),
                 catch(((guid_threadid(Agent_name,X),integer(X),thread_property(X,status(Y)),Y=running)->
                         guid_threadid(Agent_name,ThID),
                         retractall(guid_threadid(Agent_name,X)),
@@ -1179,24 +1179,15 @@ agent_clone(GUID1,(Send_Ip,Send_Port),NGUID2):-
         %((atom(GUID1),integer(Send_Port),var(GUID2))->nothing;abort),
         gensym(GUID1,GUID2),
         
-        number_string(Send_Port, P),
-        atom_concat(P, GUID2, NGUID2),
-        writeln('Tartarus check ':NGUID2),
-        %atom(GUID2),
-
-        %b_setval(NGUID2, Myvar),
-        %b_getval(Myvar, GUID2),
-
-        %writeln('Tartarus check2 ':GUID2),
+        platform_number(PNR),
+        atom_concat(PNR, GUID2, TMP),
+        atom_concat('a', TMP, NGUID2),
         
         get_time(TT),                                                                                                                           %%time in seconds from begining of os
         assert(outgoing_agent(NGUID2,TT,_)),
         assimilate_code(GUID1,AgentCode),
-        %writeln('here2'),
         replaceGUID(AgentCode,GUID1,NGUID2,CloneCode),
-        %writeln('here3'),
         agent_payload(GUID1,PayloadList),
-        writeln('here'),
         agent_GUID(GUID1,Handler,_),
         agent_token(GUID1,ListOfTokens),
         list_to_set(ListOfTokens,ListOfTokens2),
@@ -2220,9 +2211,9 @@ replaceGUID([Head|Tail],GUID1,NGUID2,Incoming,Outgoing):-
         substitute_all(CodeList,Remove,Add,R),
         name(Text,R),
         %writeln('here23'),
-        %atom_to_term(Text,Text2,_),
+        atom_to_term(Text,Text2,_),
         %writeln('here24'),
-        append(Incoming,[Text],NextIncoming),
+        append(Incoming,[Text2],NextIncoming),
         %writeln('here25'),
         replaceGUID(Tail,GUID1,NGUID2,NextIncoming,Outgoing).
 
