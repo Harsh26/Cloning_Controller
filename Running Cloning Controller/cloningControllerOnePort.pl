@@ -1,7 +1,6 @@
 % Title: RAW version - Cloning Controller for Tartarus
 % Author: Tushar Semwal 
 % Date: 26-Oct-15
-% Notes: This version is NOT thread safe. Needs "mutex" here and there! 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                   Declarations                                         %
@@ -1039,6 +1038,8 @@ timer_release(ID, N):-
 
         writeln('Thread ID ':ID),
 
+        
+
         satisfied_need(SN), 
         need(Need),
                 
@@ -1102,8 +1103,12 @@ timer_release(ID, N):-
                                 
                                 %write(Stream, W4), nl(Stream)
                                 send_log(_,W4)
+
+                                % If need =/= 0, var is first time occurance of need we will release pheromones..
                         )
         ),
+
+        % find out neighbour, eliminate neighbours[] use in the code.. It will also contain pher/con move
         
         release_agent,
 
