@@ -1,7 +1,6 @@
 % Title: RAW version - Cloning Controller for Tartarus
 % Author: Tushar Semwal 
 % Date: 26-Oct-15
-% Notes: This version is NOT thread safe. Needs "mutex" here and there! 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                   Declarations                                         %
@@ -9,7 +8,7 @@
 
 
 :-style_check(-singleton). %%hide warnings due to singleton variables
-
+:- use_module(library(assoc)).
 :-dynamic set_to_move/1.
 :-dynamic q_port/1.
 :-dynamic dq_port/1.
@@ -30,7 +29,7 @@ ack_q([]).
 transit_req(0).
 
 :-dynamic queue_length/1.
-queue_length(5).
+queue_length(4).
 
 :-dynamic clone_lifetime/1.
 clone_lifetime(10).
@@ -39,7 +38,7 @@ clone_lifetime(10).
 clone_resource(10).
 
 :-dynamic queue_threshold/1.
-queue_threshold(5).
+queue_threshold(4).
 
 :-dynamic q_monitor_steptime/1.
 q_monitor_steptime(1003).
@@ -60,10 +59,10 @@ service_reward(1).
 tau_c(0.1).
 
 :-dynamic tau_r/1.
-tau_r(100).
+tau_r(5).
 
 :-dynamic sigma/1.
-sigma(7).
+sigma(3).
 
 :-dynamic child/1.
 child('C').
@@ -105,7 +104,7 @@ start_clonning_controller(P):-
                 q_manager(P),
                 dq_manager(P),
 
-                thread_create(timer_release(ID, 0),ID,[detached(false)]),
+                thread_create(timer_release(ID, 1),ID,[detached(false)]),
                 !.
 
 
@@ -501,7 +500,7 @@ update_lifetime(GUID):- writeln('Update lifetime failed!!'),!.
 
 :- dynamic update_resource/1.
 update_resource(GUID):-
-        %writeln('here'),
+        writeln('here'),
         agent_resource(GUID, Rav),
         writeln('Agents original resource ' :Rav),
         agent_max_resource(Rmax),
@@ -509,7 +508,7 @@ update_resource(GUID):-
         cloning_pressure(P),
         %writeln('Agents Cloning Pressure ' :P),
         tau_c(Tc),
-        %writeln('Tau c ' :Tc),
+        writeln('Tau c ' :Tc),
         tau_r(Tr),
         %writeln('Tau r' :Tr),
 
@@ -518,7 +517,7 @@ update_resource(GUID):-
         
         ((P = 0)->(Z is 1 - 1/0.001);(Z is 1 - 1/P)),
         
-        %writeln('Z is ':Z),
+        writeln('Z is ':Z),
 
         Pow1 is 2.71**Y,
         %writeln('Pow1 is ':Pow1),
@@ -535,16 +534,20 @@ update_resource(GUID):-
         Mul31 is Tc * Pow2,
         %writeln('Mul31 is ':Mul31),
         Mul32 is Tr * 1,
-        %writeln('Mul32 is ':Mul32),
+        writeln('Mul32 is ':Mul32),
+
+        writeln('Rav':Rav),
+        writeln('P':P),
 
         %((Rav >= 1) -> ((P < 4) -> writeln('hihi') ; writeln('byby');nothing)),
-
+        
         (
             ((Rav >= 1), (P =< 1)) -> (Rn is Rav + Mul11 + Mul12) ;
             ((Rav < 1), (P < 1)) -> (Rn is Rav + Tc + Mul21) ;
-            ((P > 1)) -> (Rn is Rav +  Mul31 + Mul32)
+            ((P > 1)) -> (Rn is Rav +  Mul31 + Mul32);(Rn is Rav)
         ),
 
+        writeln('After updating the resource'),
         (Rn > Rmax->Rf is Rmax ; Rf is Rn),
 
         set_resource(GUID, Rf),
@@ -716,6 +719,9 @@ leave_queue(Agent,IP,Port):- writeln('leave_queue Failed'),!.
 
 :- dynamic release_agent/0.
 release_agent:-
+                        global_mutex(GMID),
+                        mutex_lock(GMID),
+                                                
                         writeln('Release Agent called...'),
                         need(N),
                         node_neighbours(X),
@@ -736,8 +742,6 @@ release_agent:-
                                                 intranode_queue([Agent|Tail]), 
                                                 clone_if_necessary(Agent), 
 
-                                                global_mutex(GMID),
-                                                mutex_lock(GMID),
                                                 
                                                 decrement_lifetime, 
                                                 showlifetime, 
@@ -784,8 +788,6 @@ release_agent:-
                                                 intranode_queue([Agent|Tail]),  
                                                 clone_if_necessary(Agent),
 
-                                                global_mutex(GMID),
-                                                mutex_lock(GMID),
                                                 
                                                 decrement_lifetime, 
                                                 showlifetime,
@@ -953,10 +955,10 @@ need_a_member(Need, [H|T]) :-
         writeln('Check integrity ':H),
         writeln('Check integrity ':Typ),
         writeln('Check integrity ':Need),
-
+        platform_port(P),
         satisfied_need(SN),
 
-        ((Typ = Need, SN =:= 0)->(retractall(satisfied_need(_)), assert(satisfied_need(1)), update_resource(H), update_lifetime(H));(nothing)), 
+        ((Typ = Need, SN =:= 0)->(retractall(satisfied_need(_)), assert(satisfied_need(1)), agent_GUID(H,Handler,(localhost,P)),agent_execute(H,(localhost, P),Handler), update_resource(H), update_lifetime(H), sleep(1));(nothing)), 
 
         need_a_member(Need, T), 
         
@@ -999,6 +1001,256 @@ see_if_satisfy(Needsat):-
         writeln("see_if_satisfy fails.."), !.
 
 
+% --------- Pheromones Predicates ------------------------- 
+:-dynamic pheromone_now/1.
+:-dynamic carry_id/2.
+:-dynamic carry_concentration/2.
+:-dynamic carry_plifetime/2.
+:-dynamic carry_nextid/2.
+:-dynamic carry_myinfo/3.
+:-dynamic carry_visp/2.
+:-dynamic carry_d/2.
+:-dynamic pheromone_timeout/1.
+pheromone_timeout(20).
+
+:-dynamic pheromone_time/1.
+
+:-dynamic lmax/1.
+lmax(20).
+
+:-dynamic cmax/1.
+cmax(1000).
+
+delete_first([_ | T], T).
+
+:-dynamic release_pheromones/2.
+
+release_pheromones(Pheromone, N):-
+
+        global_mutex(GMID),
+        mutex_lock(GMID),
+                                                
+
+        writeln('Pheromone check begin..'),
+
+        Str = 'pheromone',
+        platform_number(PNR),
+        atom_concat(Str, PNR, W1),
+        atom_concat(W1, '_', W2),
+        atom_concat(W2, N, W3),
+        atom_concat(W3, '_', W4),
+        atom_concat(W4, 'c', W5),
+        atom_concat(W5, Pheromone, Pheromone_name),
+
+        writeln('Could create Pheromone name.. ':Pheromone_name),
+        retractall(pheromone_now(_)),
+        assert(pheromone_now(Pheromone_name)),
+
+        platform_port(P),
+
+        create_mobile_agent(Pheromone_name,(localhost, P),pheromone_handler,[30,32]),
+
+        writeln('Pheromone check after begin..'),
+
+        retractall(carry_id(_, _)),
+        assert(carry_id(Pheromone_name, Pheromone)),
+
+        cmax(Cmax), lmax(Lmax), 
+
+        writeln('Pheromone check 1!!'),
+
+        retractall(carry_concentration(_,_)),
+        assert(carry_concentration(Pheromone_name, Cmax)),
+
+        retractall(carry_plifetime(_,_)),
+        assert(carry_plifetime(Pheromone_name, Lmax)),
+
+        retractall(carry_nextid(_, _)),
+        assert(carry_nextid(Pheromone_name, -1)),
+
+        retractall(carry_myinfo(_, _, _)),
+        assert(carry_myinfo(Pheromone_name, Pheromone_name, P)),
+        
+        retractall(carry_visp(_,_)),
+        assert(carry_visp(Pheromone_name, [])),
+
+        retractall(carry_d(_,_)),
+        assert(carry_d(Pheromone_name, 1)),
+
+        writeln('Pheromone check 2!!'),
+
+        add_payload(Pheromone_name, [(carry_id, 2), (carry_concentration, 2), (carry_plifetime, 2), (carry_nextid, 2), (carry_myinfo, 3), (carry_visp, 2), (carry_d, 2)]),
+
+        execute_agent(Pheromone_name, (localhost, P), pheromone_handler, main),
+        sleep(1),
+
+        mutex_unlock(GMID),
+
+        !.
+
+:- dynamic pheromone_handler/3.
+
+pheromone_handler(guid,(_,_), main):-
+        
+        writeln('This is being done by..':guid),
+        platform_port(P),
+        carry_visp(guid, VL),
+        carry_id(guid, Pheromone),
+        carry_concentration(guid, Concentration),
+        carry_plifetime(guid, Pheromlife),
+        carry_d(guid, D),
+        carry_myinfo(guid, Original_pheromone_name, Original_port),
+
+        writeln('Pheromone check 3!!'),
+
+        node_neighbours(NN),
+
+        get_number(VL, NN, Res),
+        
+        length(Res, RL),
+
+        (
+                RL =:= 0 -> 
+                        nothing 
+                        ;
+                        from_second(Res, guid, Pheromone, Concentration, Pheromlife, D, Original_pheromone_name, Original_port, VL), % give clone parameters.. 
+                        nth0(0, Res, Result),
+
+                        % give this agent new parameters.. 
+
+                        retractall(carry_id(_, _)),
+                        assert(carry_id(guid, Pheromone)),
+
+                        Newconcentration = Concentration - 100/D,
+
+                        retractall(carry_concentration(_,_)),
+                        assert(carry_concentration(guid, Newconcentration)),
+
+                        lmax(Lmax),
+                        Newpheromlife = Pheromlife - Lmax/D,
+
+                        retractall(carry_plifetime(_,_)),
+                        assert(carry_plifetime(guid, Newpheromlife)),
+
+                        retractall(carry_nextid(_, _)),
+                        assert(carry_nextid(guid, P)),
+                        
+                        retractall(carry_myinfo(_, _, _)),
+                        assert(carry_myinfo(guid, Original_pheromone_name, Original_port)),
+                        
+                        enqueue(P, VL, VLnew),
+
+                        retractall(carry_visp(_,_)),
+                        assert(carry_visp(guid, VLnew)),
+
+                        Newd = D + 1,
+
+                        retractall(carry_d(_,_)),
+                        assert(carry_d(guid, Newd)),
+
+                        move_agent(guid, (localhost, Result)) 
+        ).
+
+:- dynamic from_second/9.
+:- dynamic from_second_util/10.
+
+from_second(Res, Agent, Pheromone, Concentration, Pheromlife, D, Original_pheromone_name, Original_port, VL) :-
+    %Res = [2,3,4,5],
+    from_second_util(Res, 2, Agent, Pheromone, Concentration, Pheromlife, D, Original_pheromone_name, Original_port, VL).
+
+from_second_util([], _, _, _, _, _, _, _, _, _).
+from_second_util([E|Es], I, Agent, Pheromone, Concentration, Pheromlife, D, Original_pheromone_name, Original_port, VL) :-
+( I =< 2 ->
+        I1 is I + 1,
+        from_second_util(Es, I1, Agent, Pheromone, Concentration, Pheromlife, D, Original_pheromone_name, Original_port, VL)
+        
+        ; 
+
+        %writeln(E),
+        platform_port(P),
+        agent_clone(Agent, (localhost, P), Clone_ID),
+        sleep(1),
+
+        retractall(carry_id(_, _)),
+        assert(carry_id(Clone_ID, Pheromone)),
+
+        Newconcentration = Concentration - 100/D,
+
+        retractall(carry_concentration(_,_)),
+        assert(carry_concentration(Clone_ID, Newconcentration)),
+
+        lmax(Lmax),
+        Newpheromlife = Pheromlife - Lmax/D,
+
+        retractall(carry_plifetime(_,_)),
+        assert(carry_plifetime(Clone_ID, Newpheromlife)),
+
+        retractall(carry_nextid(_, _)),
+        assert(carry_nextid(Clone_ID, P)),
+        
+        retractall(carry_myinfo(_, _, _)),
+        assert(carry_myinfo(Clone_ID, Original_pheromone_name, Original_port)),
+        
+        enqueue(P, VL, VLnew),
+
+        retractall(carry_visp(_,_)),
+        assert(carry_visp(Clone_ID, VLnew)),
+
+        Newd = D + 1,
+
+        retractall(carry_d(_,_)),
+        assert(carry_d(Clone_ID, Newd)),
+
+
+        move_agent(Clone_ID, (localhost, E)),
+
+        I1 is I + 1,
+        from_second_util(Es, I1, Agent, Pheromone, Concentration, Pheromlife, D, Original_pheromone_name, Original_port, VL)
+).
+
+:-dynamic get_number/3.
+
+get_number(Vis, NN, Res) :-
+        %NN = [2,3,4,5],
+        %Vis = [4,3,7],
+
+        writeln('Vis':Vis),
+        writeln('NN':NN),
+
+        empty_assoc(SS0),
+        insert_all(NN, SS0, SS1),
+        insert_all(Vis, SS1, SS2),
+        writeln('Before deletion:'),
+        assoc_to_list(SS2, KVs1),
+        writeln(KVs1),
+        delete_all(Vis, SS2, SS3),
+        writeln('After deletion:'),
+        assoc_to_list(SS3, KVs2),
+        writeln(KVs2),
+        keys(KVs2, Res),
+        writeln(Res).
+
+insert_all([], SS, SS).
+insert_all([E|Es], SS0, SS) :-
+        put_assoc(E, SS0, false, SS1),
+        insert_all(Es, SS1, SS).
+
+delete_all([], SS, SS).
+delete_all([E|Es], SS0, SS) :-
+        ( get_assoc(E, SS0, false) ->
+                del_assoc(E, SS0, _, SS1),
+                delete_all(Es, SS1, SS)
+                ;
+                writeln('Failed to delete key:'), writeln(E), false
+    ).
+
+keys([], []).
+keys([K-_|KVs], [K|Keys]) :-
+    keys(KVs, Keys).
+
+
+% ----------Pheromones Predicate end ------------------------------------
+
 :-dynamic timer_release/2.
 
 timer_release(ID, N):-
@@ -1007,13 +1259,22 @@ timer_release(ID, N):-
         WT is 60 - PNR,
 
         (
-                (N =:= 0)->
+                (N =:= 1)->
                         (
                                 sleep(WT)
                         )
                         ;
                         (
-                                nothing
+                                (
+                                        (N =:= 210)->
+                                                (
+                                                        halt
+                                                )
+                                                ;
+                                                (
+                                                        nothing
+                                                )
+                                )
                         )
         ),
 
@@ -1029,6 +1290,8 @@ timer_release(ID, N):-
         mutex_lock(GPOSTT),
 
         writeln('Thread ID ':ID),
+
+        
 
         satisfied_need(SN), 
         need(Need),
@@ -1063,8 +1326,11 @@ timer_release(ID, N):-
                         (
                                 intranode_queue(Ilog),
                                 length(Ilog,Lenlog),
-                
+
                                 writeln('Need of Platform satisfied!! At Time Point ':N),
+
+                                retractall(pheromone_now(_)), assert(pheromone_now('None')),
+                                retractall(pheromone_time(_)), assert(pheromone_time(1)),
                                 
                                 Str1 = N, Str2 = ' ', Str3 = '1', Str4 = ' ', Str5 = Lenlog,
 
@@ -1092,9 +1358,30 @@ timer_release(ID, N):-
                                 atom_concat(W3, Str5, W4),
                                 
                                 %write(Stream, W4), nl(Stream)
-                                send_log(_,W4)
+                                send_log(_,W4),
+
+                                need(Pheromone),
+                                writeln('Before Pheromones release..'),
+
+                                pheromone_now(Pnow),
+                                pheromone_timeout(PTO),
+                                
+                                pheromone_time(Ptime),
+
+                                Newptime = Ptime + 1,
+
+                                retractall(pheromone_time(_)),
+                                assert(pheromone_time(Newptime)),
+
+                                pheromone_time(PT),
+
+                                % If need not equal 0, var is first time occurance of need we will release pheromones.. 
+                                ((Pnow = 'None' ; ((PT mod PTO) =:= 0))-> release_pheromones(Pheromone, N) ; nothing)
                         )
         ),
+
+        % Decrement life of pheromones & Forward others pheromones
+        % find out neighbour, eliminate neighbours[] used in the code.. It will also contain pher/con move
         
         release_agent,
 
