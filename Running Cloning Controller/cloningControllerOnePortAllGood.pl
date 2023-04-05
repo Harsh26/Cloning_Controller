@@ -1017,7 +1017,7 @@ pheromone_timeout(20).
 :-dynamic pheromone_time/1.
 
 :-dynamic lmax/1.
-lmax(20).
+lmax(18).
 
 :-dynamic cmax/1.
 cmax(1000).
@@ -1034,56 +1034,45 @@ release_pheromones_thread(ID,Pheromone,N):-
 
         writeln('Pheromone check begin..'),
 
+        
         Str = 'pheromone',
         platform_number(PNR),
-        atom_concat(Str, PNR, W1),
-        atom_concat(W1, '_', W2),
-        atom_concat(W2, N, W3),
-        atom_concat(W3, '_', W4),
-        atom_concat(W4, 'c', W5),
-        atom_concat(W5, Pheromone, Pheromone_name),
+        atom_concat(Str, PNR, Pheromone_name),
 
-        writeln('Could create Pheromone name.. ':Pheromone_name),
+
         retractall(pheromone_now(_)),
         assert(pheromone_now(Pheromone_name)),
 
         platform_port(P),
 
-        create_mobile_agent(Pheromone_name,(localhost, P),pheromone_handler,[30,32]),
-
         writeln('Pheromone check after begin..'),
 
-        retractall(carry_id(_, _)),
+        retractall(carry_id(Pheromone_name, _)),
         assert(carry_id(Pheromone_name, Pheromone)),
 
         cmax(Cmax), lmax(Lmax), 
 
         writeln('Pheromone check 1!!'),
 
-        retractall(carry_concentration(_,_)),
+        retractall(carry_concentration(Pheromone_name,_)),
         assert(carry_concentration(Pheromone_name, Cmax)),
 
-        retractall(carry_plifetime(_,_)),
+        retractall(carry_plifetime(Pheromone_name,_)),
         assert(carry_plifetime(Pheromone_name, Lmax)),
 
-        retractall(carry_nextid(_, _)),
+        retractall(carry_nextid(Pheromone_name, _)),
         assert(carry_nextid(Pheromone_name, -1)),
 
-        retractall(carry_myinfo(_, _, _)),
+        retractall(carry_myinfo(Pheromone_name, _, _)),
         assert(carry_myinfo(Pheromone_name, Pheromone_name, P)),
         
-        retractall(carry_visp(_,_)),
+        retractall(carry_visp(Pheromone_name,_)),
         assert(carry_visp(Pheromone_name, [])),
 
-        retractall(carry_d(_,_)),
+        retractall(carry_d(Pheromone_name,_)),
         assert(carry_d(Pheromone_name, 1)),
 
         writeln('Pheromone check 2!!'),
-
-        add_payload(Pheromone_name, [(carry_id, 2), (carry_concentration, 2), (carry_plifetime, 2), (carry_nextid, 2), (carry_myinfo, 3), (carry_visp, 2), (carry_d, 2)]),
-
-        
-        %execute_agent(Pheromone_name, (localhost, P), pheromone_handler, main),
         
         create_clones_and_disperse(Pheromone_name),
 
@@ -1105,11 +1094,6 @@ release_pheromones(Pheromone, N):-
 
         thread_create(release_pheromones_thread(ID, Pheromone, N),ID,[detached(true)]),        
         !.
-
-:- dynamic pheromone_handler/3.
-
-pheromone_handler(guid,(_,_), main):-
-        writeln('').
 
 
 :-dynamic create_clones_and_disperse/1.
@@ -1139,54 +1123,8 @@ create_clones_and_disperse(Pheromone_name):-
                 RL =:= 0 -> 
                         nothing 
                         ;
-                        from_second(Res, Pheromone_name, Pheromone, Concentration, Pheromlife, D, Original_pheromone_name, Original_port, VL), % give clone parameters.. 
-                        nth0(0, Res, Result),
-
-                        % give this agent new parameters.. 
-
-                        writeln('This is still being done by..':Pheromone_name),
-
-                        retractall(carry_id(Pheromone_name, _)),
-                        assert(carry_id(Pheromone_name, Pheromone)),
-
-                        Newconcentration is Concentration - 100/D,
-
-                        retractall(carry_concentration(Pheromone_name,_)),
-                        assert(carry_concentration(Pheromone_name, Newconcentration)),
-
-                        lmax(Lmax),
-                        Newpheromlife is Pheromlife - Lmax/D,
-
-                        retractall(carry_plifetime(Pheromone_name,_)),
-                        assert(carry_plifetime(Pheromone_name, Newpheromlife)),
-
-                        retractall(carry_nextid(Pheromone_name, _)),
-                        assert(carry_nextid(Pheromone_name, P)),
-                        
-                        retractall(carry_myinfo(Pheromone_name, _, _)),
-                        assert(carry_myinfo(Pheromone_name, Original_pheromone_name, Original_port)),
-                        
-                        enqueue(P, VL, VLnew),
-
-                        retractall(carry_visp(Pheromone_name,_)),
-                        assert(carry_visp(Pheromone_name, VLnew)),
-
-                        Newd is D + 1,
-
-                        retractall(carry_d(Pheromone_name,_)),
-                        assert(carry_d(Pheromone_name, Newd)),
-
-                        carry_id(Pheromone_name, ID),
-                        carry_concentration(Pheromone_name, Con),
-                        carry_plifetime(Pheromone_name, Lf),
-                        carry_nextid(Pheromone_name, Pid),
-                        carry_myinfo(Pheromone_name, Opn, Oprt),
-                        carry_visp(Pheromone_name, Vln),
-                        carry_d(Pheromone_name, Nd),
-
-                        format("Values ~w, ~w, ~w, ~w, ~w, ~w, ~w, ~w, ~w.~n", [Pheromone_name, ID, Con, Lf, Pid, Opn, Oprt, Vln, Nd]),
-
-                        move_agent(Pheromone_name, (localhost, Result)) 
+                        writeln('ccd, here..'),
+                        from_first(Res, Pheromone_name, Pheromone, Concentration, Pheromlife, D, Original_pheromone_name, Original_port, VL) % give clone parameters.. 
         ),
 
         !.
@@ -1198,28 +1136,27 @@ create_clones_and_disperse(Pheromone_name):-
 
 
 
-:- dynamic from_second/9.
-:- dynamic from_second_util/10.
+:- dynamic from_first/9.
+:- dynamic from_first_util/9.
 
-from_second(Res, Agent, Pheromone, Concentration, Pheromlife, D, Original_pheromone_name, Original_port, VL) :-
+from_first(Res, Agent, Pheromone, Concentration, Pheromlife, D, Original_pheromone_name, Original_port, VL) :-
     %Res = [2,3,4,5],
-    from_second_util(Res, 2, Agent, Pheromone, Concentration, Pheromlife, D, Original_pheromone_name, Original_port, VL).
+    from_first_util(Res, Agent, Pheromone, Concentration, Pheromlife, D, Original_pheromone_name, Original_port, VL).
 
-from_second_util([], _, _, _, _, _, _, _, _, _).
-from_second_util([E|Es], I, Agent, Pheromone, Concentration, Pheromlife, D, Original_pheromone_name, Original_port, VL) :-
-( I =< 2 ->
-        I1 is I + 1,
-        from_second_util(Es, I1, Agent, Pheromone, Concentration, Pheromlife, D, Original_pheromone_name, Original_port, VL)
-        
-        ; 
+from_first_util([], _, _, _, _, _, _, _, _).
+from_first_util([E|Es], Agent, Pheromone, Concentration, Pheromlife, D, Original_pheromone_name, Original_port, VL) :-
 
-        %writeln(E),
         platform_port(P),
+
+        %writeln('from_second_util chech 0'),
+
         agent_clone(Agent, (localhost, P), Clone_ID),
         sleep(1),
 
         retractall(carry_id(Clone_ID, _)),
         assert(carry_id(Clone_ID, Pheromone)),
+
+        %writeln('from_second_util chech 1'),
 
         Newconcentration is Concentration - 100/D,
 
@@ -1235,6 +1172,8 @@ from_second_util([E|Es], I, Agent, Pheromone, Concentration, Pheromlife, D, Orig
         retractall(carry_nextid(Clone_ID, _)),
         assert(carry_nextid(Clone_ID, P)),
         
+        %writeln('from_second_util chech 2'),
+
         retractall(carry_myinfo(Clone_ID, _, _)),
         assert(carry_myinfo(Clone_ID, Original_pheromone_name, Original_port)),
         
@@ -1248,6 +1187,8 @@ from_second_util([E|Es], I, Agent, Pheromone, Concentration, Pheromlife, D, Orig
         retractall(carry_d(Clone_ID,_)),
         assert(carry_d(Clone_ID, Newd)),
 
+        %writeln('from_second_util chech 3'),
+
         carry_id(Clone_ID, ID),
         carry_concentration(Clone_ID, Con),
         carry_plifetime(Clone_ID, Lf),
@@ -1260,10 +1201,8 @@ from_second_util([E|Es], I, Agent, Pheromone, Concentration, Pheromlife, D, Orig
 
 
         move_agent(Clone_ID, (localhost, E)),
-
-        I1 is I + 1,
-        from_second_util(Es, I1, Agent, Pheromone, Concentration, Pheromlife, D, Original_pheromone_name, Original_port, VL)
-).
+        
+        from_first_util(Es, Agent, Pheromone, Concentration, Pheromlife, D, Original_pheromone_name, Original_port, VL).
 
 :-dynamic get_number/3.
 
@@ -1313,24 +1252,14 @@ delete_pheromone_request([H|T],X):-
         
         agent_payload(H,PayloadList),
 
-        %writeln('Payload list ': PayloadList),
-
-        %writeln('Original port name ':Original_port),
-
-        %(
-        %        carry_myinfo(H, Original_pheromone_name, Original_port)->
-        %        writeln('Pheomone detail ':H),((Original_pheromone_name = X)-> purge_agent(H), sleep(1);nothing)
-        %        ;
-        %        writeln('Going here ':H), writeln('Pherom id ':Original_pheromone_name),nothing
-        %),
-
         nth0(4, PayloadList, CI),
 
-        ((carry_myinfo,3) = CI -> writeln('Pheromone predicate ':H), write(typeof(H)),writeln(''),
-
-        (H = 'pheromone3_1_c1'->writeln('no help');writeln('You found culprit')),
+        ((carry_myinfo,3) = CI -> writeln('Pheromone predicate ':H),
         
-        carry_myinfo(H, _, _)  ; writeln('Agent predicate')),
+        carry_myinfo(H, Original_pheromone_name, Original_port), writeln('Original pheromone ':Original_pheromone_name),
+        ((Original_pheromone_name = X, H \== X)-> purge_agent(H);nothing)
+        
+        ; writeln('Agent predicate')),
         
         delete_pheromone_request(T, X),
         !.
@@ -1340,18 +1269,18 @@ delete_pheromone_request([H|T],X):-
         !.
 
 :- dynamic whisperer_handle_thread/3.
-whisperer_handle_thread(ID,(IP,NP),X):-
-        global_mutex(GMID),
-        mutex_lock(GMID),
+whisperer_handle_thread(_,(IP,NP),X):-
+        %global_mutex(GMID),
+        %mutex_lock(GMID),
 
         writeln('Trying to delete pheromone..'),
         agent_list_new(Aglist),
         delete_pheromone_request(Aglist,X),
 
-        mutex_unlock(GMID),
+        %mutex_unlock(GMID),
         !.
 
-whisperer_handle_thread(ID,(IP,NP),X):-
+whisperer_handle_thread(_,(IP,NP),X):-
         writeln('Whisperer handel thread Failed!!'),
         !.
 
@@ -1360,7 +1289,9 @@ whisperer(_,(IP,NP),deletepherom(PH)):-
         
         writeln('Arrived whisperer atleast.. Recieved Whispering request from ':NP),
         writeln('Pheromone, whose request to be deleted, is recieved ':PH),
-        thread_create(whisperer_handle_thread(ID, (IP, NP), PH),ID,[detached(true)]),        
+        %thread_create(whisperer_handle_thread(ID, (IP, NP), PH),ID,[detached(true)]), 
+
+        whisperer_handle_thread(_, (IP, NP), PH),
         !.
 
 whisperer(_,(localhost,NP),deletepherom(PH)):-
@@ -1390,6 +1321,38 @@ tell_all_other_nodes([Node|Nodes], PHnow):-
 tell_all_other_nodes(AN, PHnow):-
         writeln('Tell all other nodes failed!!'),
         !.
+
+
+:-dynamic decrement_lifetime_pheromones/1.
+
+decrement_lifetime_pheromones([]).
+
+decrement_lifetime_pheromones([H|T]):-
+
+        agent_payload(H,PayloadList),
+        nth0(4, PayloadList, CI),
+
+        pheromone_now(Pnow),
+
+        (
+                (carry_myinfo,3) = CI ->
+                                        (
+                                                carry_plifetime(H, Lifetime),
+                                                Newlifetime is Lifetime - 1, 
+
+                                                retractall(carry_plifetime(H, _)),
+                                                assert(carry_plifetime(H, Newlifetime)),
+
+                                                (Newlifetime =:= 0, H \== Pnow -> purge_agent(H), writeln('Pheromones lifetime became zero ':H);writeln('Pheromones Life ':Newlifetime))
+                                        )
+                                        ;
+                                        nothing
+        ),
+
+        do_decr(T),
+        !.
+
+
 
 % ----------Pheromones Predicate end ------------------------------------
 
@@ -1531,8 +1494,14 @@ timer_release(ID, N):-
         ),
 
         % Decrement life of pheromones & Forward others pheromones
+
+        %agent_list_new(ToDecrement),
+        %decrement_lifetime_pheromones(ToDecrement),
+
         % find out neighbour, eliminate neighbours[] used in the code.. It will also contain pher/con move
         
+        sleep(3),
+
         release_agent,
 
         mutex_unlock(GPOSTT),
