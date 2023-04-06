@@ -9,6 +9,8 @@
 
 :-style_check(-singleton). %%hide warnings due to singleton variables
 :- use_module(library(assoc)).
+:- use_module(library(lists)).
+
 :-dynamic set_to_move/1.
 :-dynamic q_port/1.
 :-dynamic dq_port/1.
@@ -190,17 +192,17 @@ q_manager_handle(guid,(IP,P),recv_agent(X)):- write('Q-manager handler failed!!'
 :- dynamic migrate_typhlet/1.
 migrate_typhlet(GUID):-
                 writeln('\n'),
-                 writeln('Migrating agent to the Intranode queue':GUID),
-                 intranode_queue(I),
+                writeln('Migrating agent to the Intranode queue':GUID),
+                intranode_queue(I),
                  
-                 (member(GUID,I)->
-                 (dequeue(GUID,I,In),enqueue(GUID,In,Inew));
-                 (enqueue(GUID,I,Inew), platform_port(QP)
-                  )
-                 ),
+                (member(GUID,I)->
+                        (dequeue(GUID,I,In),enqueue(GUID,In,Inew))
+                        ;
+                        (enqueue(GUID,I,Inew), platform_port(QP))
+                ),
 
-                 update_intranode_queue(Inew),
-                 writeln('Agent added to the queue':Inew),
+                update_intranode_queue(Inew),
+                writeln('Agent added to the queue':Inew),
 
                  ack_q(ACK_Q),
                 (
@@ -241,14 +243,21 @@ update_ack_queue(X):- write('update_ack_queue Failed'),!.
 :- dynamic initiate_migration/1.
 initiate_migration(GUID, NP):-
                 
-                writeln('\n'),
-                write('Leaving Queue':GUID),
-                writeln(' To ':NP),
-
-                platform_port(Q),
+                agent_list_new(Aglist),
+                (member(GUID, Aglist)->
                 
-                intranode_queue(I),
-                writeln('Initiate_migration Successful!!!, updated intranode queue:':I),
+                        writeln('\n'),
+                        write('Leaving Queue':GUID),
+                        writeln(' To ':NP),
+
+                        platform_port(Q),
+                
+                        intranode_queue(I),
+                        writeln('Initiate_migration Successful!!!, updated intranode queue:':I)
+
+                        ;
+                        nothing
+                ),
         
         !.
 
@@ -582,7 +591,6 @@ dequeue(E, [E | T], T).
 
 dequeue(E, [E | _], _).
 
-member_queue(Element, Queue) :-member(Element, Queue).
 
 add_list_to_queue(List, Queue, Newqueue) :-append(Queue, List, Newqueue).
 
@@ -617,9 +625,18 @@ dq_manager_thread_ack(ID, (IP, P), X):-
                 posted_lock_dq(GPOSTT),
                 mutex_lock(GPOSTT),
 
-                writeln('ACK by the receiver':P:X),
-                initiate_migration(X, P),
-                dq_manager_handler(_,(IP,P),X),
+                agent_list_new(Aglist),
+                (member(X, Aglist)->
+                        writeln('ACK by the receiver':P:X),
+                        initiate_migration(X, P),
+                        dq_manager_handler(_,(IP,P),X)
+
+                        ;
+
+                        nothing
+                ),
+
+                
         
                 mutex_unlock(GPOSTT),
                 !.
@@ -634,9 +651,13 @@ dq_manager_thread_nak(ID, (IP, P), X):-
                 posted_lock_dq(GPOSTT),
                 mutex_lock(GPOSTT),
 
-                writeln('Migration Denied (NAK) by the receiver'),
-
-                migrate_typhlet(X),
+                agent_list_new(Aglist),agent_list_new([H|T]),
+                ((member(X, Aglist), H = X)->
+                        writeln('Migration Denied (NAK) by the receiver'),
+                        migrate_typhlet(X)
+                        ;
+                        nothing
+                ),
 
                 mutex_unlock(GPOSTT),
 
@@ -671,26 +692,34 @@ dq_manager_handle(_,(IP,P),nack(X)):- writeln('dq_manager_handle NAK Failed'),!.
 % To release agent from the intranode queue.
 dq_manager_handler(_,(IP,NP),Agent):-
 
-                writeln('Removing agent from the Queue':Agent),
-
-                intranode_queue(Ihere),
-                writeln('Agents currently in queue ':Ihere),
-
-                platform_port(PP),
+                agent_list_new(Aglist),
+                (member(Agent, Aglist)->
                 
-                my_service_reward(Agent, S),
-                Snew is S+1,
-                writeln('New Reward is ':Snew),
-                give_reward(Agent, Snew),
-                
-                move_agent(Agent,(localhost,NP)),
+                        writeln('Removing agent from the Queue':Agent),
 
-                dequeue(Agent,Ihere,In),
+                        intranode_queue(Ihere),
+                        writeln('Agents currently in queue ':Ihere),
 
-                update_intranode_queue(In),
-                intranode_queue(Ifinal),
-                writeln('Agents now in queue ':Ifinal), 
+                        agent_list_new(Tochk),
+                        writeln('Agents in Aglist ':Tochk),
 
+                        platform_port(PP),
+                        
+                        my_service_reward(Agent, S),
+                        Snew is S+1,
+                        writeln('New Reward is ':Snew),
+                        give_reward(Agent, Snew),
+                        
+                        move_agent(Agent,(localhost,NP)),
+
+                        dequeue(Agent,Ihere,In),
+
+                        update_intranode_queue(In),
+                        intranode_queue(Ifinal),
+                        writeln('Agents now in queue ':Ifinal)
+                        ;
+                        nothing
+                ),
         !.
 
 dq_manager_handler(_,(IP,NP),Agent):-
@@ -885,28 +914,6 @@ do_decr([H|T]):-
         %writeln('do_decr end'),
         do_decr(T),
         !.
-
-:-dynamic member_check/1.
-
-member_check([]).
-
-member_check([H|T]):-
-        agent_list_new(Aglist),
-        (member(H, Aglist)->    (
-                                        tmp_q(Q),
-                                        enqueue(H, Q, Qn), 
-                                        retractall(tmp_q(_)),
-                                        assert(tmp_q(Qn)),
-                                        member_check(T)
-                                )
-                                ;
-                                (
-                                        member_check(T)
-                                )
-        ),
-
-        !.
-        
         
 
 :- dynamic decrement_lifetime/0.
@@ -916,7 +923,6 @@ decrement_lifetime:-
         intranode_queue(I),
         %agent_list_new(Aglist),
         %writeln('Aglist ': Aglist),
-        %member_check(I),
         %tmp_q(Q),
         %writeln('Q here ' :Q),
         %update_intranode_queue(Q),
@@ -1027,9 +1033,9 @@ delete_first([_ | T], T).
 
 
 :- dynamic release_pheromones_thread/3.
-release_pheromones_thread(ID,Pheromone,N):-
-        global_mutex(GMID),
-        mutex_lock(GMID),
+release_pheromones_thread(_,Pheromone,N):-
+        %global_mutex(GMID),
+        %mutex_lock(GMID),
                                                 
 
         writeln('Pheromone check begin..'),
@@ -1070,14 +1076,14 @@ release_pheromones_thread(ID,Pheromone,N):-
         assert(carry_visp(Pheromone_name, [])),
 
         retractall(carry_d(Pheromone_name,_)),
-        assert(carry_d(Pheromone_name, 1)),
+        assert(carry_d(Pheromone_name, 2)),
 
         writeln('Pheromone check 2!!'),
         
         create_clones_and_disperse(Pheromone_name),
 
         sleep(1),
-        mutex_unlock(GMID),
+        %mutex_unlock(GMID),
         !.
 
 release_pheromones_thread(ID,(IP,NP),X):-
@@ -1092,7 +1098,8 @@ release_pheromones(Pheromone, N):-
         writeln('Arrived release pheromone.. ':Pheromone),
         writeln('At iteration numbered ':N),
 
-        thread_create(release_pheromones_thread(ID, Pheromone, N),ID,[detached(true)]),        
+        %thread_create(release_pheromones_thread(ID, Pheromone, N),ID,[detached(true)]), 
+        release_pheromones_thread(_, Pheromone, N),       
         !.
 
 
@@ -1200,7 +1207,7 @@ from_first_util([E|Es], Agent, Pheromone, Concentration, Pheromlife, D, Original
         format("Values ~w, ~w, ~w, ~w, ~w, ~w, ~w, ~w, ~w.~n", [Clone_ID, ID, Con, Lf, Pid, Opn, Oprt, Vln, Nd]),
 
 
-        move_agent(Clone_ID, (localhost, E)),
+        move_agent(Clone_ID, (localhost, E)), sleep(1),
         
         from_first_util(Es, Agent, Pheromone, Concentration, Pheromlife, D, Original_pheromone_name, Original_port, VL).
 
@@ -1324,37 +1331,79 @@ tell_all_other_nodes(AN, PHnow):-
 
 
 :-dynamic decrement_lifetime_pheromones/1.
+:-dynamic decrement_lifetime_pheromones_util/1.
 
-decrement_lifetime_pheromones([]).
+decrement_lifetime_pheromones_util([]).
 
-decrement_lifetime_pheromones([H|T]):-
-
+decrement_lifetime_pheromones_util([H|T]):-
+        
+        writeln('Decrementing life of pheromone..':H),
         agent_payload(H,PayloadList),
         nth0(4, PayloadList, CI),
 
-        pheromone_now(Pnow),
+        Str = 'pheromone',
+        platform_number(PNR),
+        atom_concat(Str, PNR, Pheromone_name),
 
+        agent_list_new(A),
         (
-                (carry_myinfo,3) = CI ->
+                (carry_myinfo,3) = CI, member(H, A) ->
                                         (
+                                                carry_myinfo(H, Agentpar, Agentport),
+
                                                 carry_plifetime(H, Lifetime),
                                                 Newlifetime is Lifetime - 1, 
 
                                                 retractall(carry_plifetime(H, _)),
                                                 assert(carry_plifetime(H, Newlifetime)),
 
-                                                (Newlifetime =:= 0, H \== Pnow -> purge_agent(H), writeln('Pheromones lifetime became zero ':H);writeln('Pheromones Life ':Newlifetime))
+                                                write('Comparing '),
+                                                write(Agentpar),
+                                                write(' and '),
+                                                writeln(Pheromone_name),
+
+                                                agent_list_new(Ag),
+                                                ((Newlifetime =< 0, Pheromone_name \== Agentpar ,  H \== Pheromone_name, member(H, Ag)) -> writeln('Pheromones lifetime became zero ':H), purge_agent(H);writeln('Pheromones Life ':Newlifetime))
                                         )
                                         ;
                                         nothing
         ),
 
-        do_decr(T),
+        decrement_lifetime_pheromones_util(T),
+        !.
+
+decrement_lifetime_pheromones_util([_|_]):-
+        writeln('Decrement lifetime util of pheromone failed !!'),
         !.
 
 
+decrement_lifetime_pheromones(Aglist):-
+
+        global_mutex(GMID),
+        mutex_lock(GMID),
+
+        agent_list_new(Aglistnew),
+        decrement_lifetime_pheromones_util(Aglistnew),
+
+        mutex_unlock(GMID),
+        !.
+
+decrement_lifetime_pheromones([_|_]):-
+        writeln('Decrement lifetime of pheromone failed !!'),
+        !.
+
 
 % ----------Pheromones Predicate end ------------------------------------
+    
+
+:-dynamic sanitize/3.
+
+sanitize(Aglist, I, Result):-
+        % find the intersection of I and Aglist
+        intersection(I, Aglist, Intersection),
+        % convert the intersection to a list and assign it to Result
+        list_to_set(Intersection, Result).
+
 
 :-dynamic timer_release/2.
 
@@ -1396,8 +1445,17 @@ timer_release(ID, N):-
 
         writeln('Thread ID ':ID),
 
-        
 
+        agent_list_new(Agents_list),
+        intranode_queue(Isan),
+
+        sanitize(Agents_list, Isan, Rsan),
+
+        update_intranode_queue(Rsan),
+
+        write('In the beginning of iteration after sanitization, list is '),
+        writeln(Rsan),
+        
         satisfied_need(SN), 
         need(Need),
                 
@@ -1488,19 +1546,23 @@ timer_release(ID, N):-
 
                                 pheromone_time(PT),
 
+                                ((((PT mod PTO) =:= 0), Pnow \== 'None')-> writeln('Inside Timeout 1..'),all_nodes(ANN),tell_all_other_nodes(ANN, Pnow);nothing),
+
                                 % If need not equal 0, var is first time occurance of need we will release pheromones.. 
-                                ((Pnow = 'None' ; ((PT mod PTO) =:= 0))-> release_pheromones(Pheromone, N) ; nothing)
+                                ((Pnow = 'None' ; ((PT mod PTO) =:= 0))-> writeln('Inside Timeout 2..'),release_pheromones(Pheromone, N) ; nothing)
                         )
         ),
 
+        sleep(3),
+
         % Decrement life of pheromones & Forward others pheromones
 
-        %agent_list_new(ToDecrement),
-        %decrement_lifetime_pheromones(ToDecrement),
+        agent_list_new(ToDecrement),
+        decrement_lifetime_pheromones(ToDecrement),
 
         % find out neighbour, eliminate neighbours[] used in the code.. It will also contain pher/con move
         
-        sleep(3),
+        
 
         release_agent,
 
