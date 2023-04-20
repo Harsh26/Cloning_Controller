@@ -752,7 +752,8 @@ leave_queue(Agent,IP,Port):- writeln('leave_queue Failed'),!.
 
 :-dynamic pher/1.
 pher(NP):-
-
+        find_highest_concentration_pheromone(H, PherName, NxtNode), writeln('Nxt Node ':NxtNode),
+        NP = NxtNode,
         !.
 pher(_):-
         writeln('Pher predicate failed !!'),
@@ -761,48 +762,106 @@ pher(_):-
 
 :-dynamic cons/1.
 cons(NP):-
-        intranode_queue(I),
-        length(I, Len),
-
-        (
-                (Len =:= 0)->
-                        nothing 
-                        ;
-                        intranode_queue([H|T]),
-                        node_neighbours(NN),
-                        agent_visit(H, Vis)
-        ),
+        nn_minus_vis(H, Nxtnode), writeln('Nxt node ':Nxtnode),
+        NP = Nxtnode,
         !.
 cons(_):-
         writeln('Cons predicate failed !!'),
         !.
 
+delete_first([_|T], T).
+
+:-dynamic phercon_decider/2.
+phercon_decider(Agent, Decider):-
+        
+        agent_type(Agent, AgentType),
+        pheromones_db(Pheromones),
+
+        % Check if any pheromone has the same agent type
+        (member([_, _, _, _, _, _, AgentType], Pheromones) ->
+                Decider = 'P'
+                ;
+                Decider = 'C'
+        ),
+
+        !.
+
+phercon_decider(_, _):-
+        writeln('phercon_decider failed !!'),
+        !.
+
+
+% Define a predicate to find the pheromone with the highest concentration for a given agent type
+find_highest_concentration_pheromone(Agent, PheromoneName, Nxt) :-
+        
+        agent_type(Agent, AgentType),
+        
+        % Get the list of pheromones
+        pheromones_db(Pheromones),
+
+        writeln('Pheromones list for reference ': Pheromones),
+
+        % Initialize the maximum concentration and index of the pheromone with the highest concentration
+        MaxConc = -2147483648,
+
+        writeln('find_highest check 1..'),
+        % Loop through the list of pheromones
+        findall(I, (nth0(I, Pheromones, [_, Conc, _, _, _, _, AgentType]), Conc > MaxConc), Is),
+
+        writeln('find_highest check 2..'),
+        % If there are pheromones with the given agent type
+        \+ Is = [],
+
+        writeln('find_highest check 3..'),
+        % Get the index of the pheromone with the highest concentration
+        max_list(Is, MaxIdx),
+
+        writeln('find_highest check 4..'),
+        % Get the name of the pheromone with the highest concentration
+        nth0(MaxIdx, Pheromones, [PheromoneName, _, _, Nxt, _, _, _]).
+
+
+
+nn_minus_vis(Agent, NxtNode):-
+        node_neighbours(NN),
+        agent_visit(Agent, Vis),
+
+        subtract(NN, Vis, Result),
+
+        writeln('NN ':NN),
+        writeln('Vis ':Vis),
+        writeln('Result ':Result),
+
+        length(Result, Len),
+
+        (Len = 0 -> random_member(NxtNode, NN) ; random_member(NxtNode, Result)).
+
 :-dynamic phercon_neighbour/1.
 phercon_neighbour(NP):-
-        %(
-        %        pher(NP)->
-        %                nothing
-        %                ;
-        %                cons(NP)
-        %),
-
-        writeln('Inside phercon_neighbour..'),
-
-        intranode_queue(I),
-        length(I, Len),
-
+        
         writeln('Phercon neighbour check 1..'),
 
-        (
-                (Len > 0)->
-                        intranode_queue([H|T]),
-                        writeln('Phercon neighbour check 2..':H),
-                        agent_visit(H, Vis),
-                        writeln('Phercon neighbour check 3..':H),
-                        writeln('Since queue is not empty, the topmost agents vis list is ':Vis)
+        intranode_queue([H|T]),
+        writeln('Phercon neighbour check 2..':H),
+        agent_visit(H, Vis),
+        writeln('Phercon neighbour check 3..':H),
+        writeln('Since queue is not empty, the topmost agents vis list is ':Vis),
+        length(Vis, Vislen),
+        (Vislen > 5 -> delete_first(Vis, RVis), retractall(agent_visit(H, _)), assert(agent_visit(H, RVis)) ; nothing),
+        agent_visit(H, Nvis),
+        writeln('New Visit ': Nvis),
 
+        phercon_decider(H, Decider),
+
+        writeln('Decider ':Decider),
+
+        %(Decider = 'P' -> find_highest_concentration_pheromone(H, PherName, NxtNode), writeln('Nxt Node ':NxtNode); nn_minus_vis(H, Nxtnode), writeln('Nxt node ':Nxtnode)),
+
+        (        
+                Decider = 'P'->
+                        pher(NP)
                         ;
-                        nothing
+                        cons(NP)
         ),
 
         !.
@@ -827,17 +886,16 @@ release_agent:-
                         (
                         (L > 0)-> 
                         (
-                                node_neighbours([H | T]),
-                                NP is H,
-                                retractall(neighbour(_)), assert(neighbour(NP)),
-
-                                %phercon_neighbour(NP),
-
                                 intranode_queue(I), length(I,Len), 
                                 
                                 (
                                         (Len > 0)->
                                         (
+                                                node_neighbours([H | T]), % Shuffling..
+                                                %NP is H,
+                                                phercon_neighbour(NP),
+                                                retractall(neighbour(_)), assert(neighbour(NP)),
+
                                                 intranode_queue([Agent|Tail]), 
 
                                                 clone_if_necessary(Agent), 
@@ -862,7 +920,7 @@ release_agent:-
                                                         )
                                                 ),
 
-                                                enqueue(H, T, Tn), 
+                                                enqueue(H, T, Tn), % Shuffling..
                                                 
                                                 retractall(node_neighbours(_)), 
                                                 assert(node_neighbours(Tn))
@@ -1584,7 +1642,7 @@ timer_release(ID, N):-
                                                         
                                                         pheromone_time(Ptime),
 
-                                                        Newptime = Ptime + 1,
+                                                        Newptime is Ptime + 1,
 
                                                         retractall(pheromone_time(_)),
                                                         assert(pheromone_time(Newptime)),
