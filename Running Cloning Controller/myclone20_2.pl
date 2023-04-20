@@ -10,6 +10,9 @@
 :-dynamic agent_type/2.
 :-dynamic agent_inherit/2.
 :-dynamic need_train/1.
+:-dynamic agent_visit/2.
+:-dynamic all_nodes/1.
+
 
 :-dynamic parent/1.
 parent('P').
@@ -20,29 +23,38 @@ starttar:-
    start_tartarus(localhost,15002,30),
    retractall(need_train(_)),
    assert(need_train([1,3])),
+   assert(all_nodes([15000,15001,15002,15003,15004,15005,15006,15007,15008,15009,15010,15011,15012,15013,15014,15015,15016,15017,15018,15019])),
    retractall(platform_number(_)),
    assert(platform_number(2)).
 
 attachneighbour:-
    retractall(node_neighbours(_)),
-   assert(node_neighbours([15006,15019,15000,15015,15010,15018,15007,15005,15017,15014,15003,15001,15008,15012,15013,15009,15011,15004,15016])).
+   assert(node_neighbours([15003,15001])).
 
 
 startcontroller:-
    consult("cloningControllerOnePort.pl"),
+   platform_port(P),
    start_clonning_controller(15002),
    create_mobile_agent(agent2,(localhost,15002),handler1,[30,32]),
    retractall(agent_resource(_,_)), assert(agent_resource(guid,20)), retractall(agent_lifetime(_,_)), assert(agent_lifetime(guid, 5)), retractall(my_service_reward(_,_)), assert(my_service_reward(guid, 0)),
    retractall(agent_type(_,_)), assert(agent_type(guid, 2)), retractall(agent_inherit(_,_)), assert(agent_inherit(guid, 'P')),
-   add_payload(agent2, [(agent_resource,2), (agent_lifetime, 2), (my_service_reward, 2), (agent_type,2), (agent_inherit,2)]),
-   platform_port(15002),
+   retractall(agent_visit(_,_)), assert(agent_visit(guid, [P])),
+   add_payload(agent2, [(agent_resource,2), (agent_lifetime, 2), (my_service_reward, 2), (agent_type,2), (agent_inherit,2), (agent_visit,2)]),
+
    init_need(0),
    assert(satisfied_need(0)),
+   assert(pheromone_now('None')),
+   assert(pheromone_time(1)),
+   
    migrate_typhlet(agent2).
-
-
-
 
 
 handler1(guid,(_,_),main):-
     writeln('Namaste').
+
+
+my_predicate:-
+   starttar,
+   attachneighbour,
+   startcontroller.

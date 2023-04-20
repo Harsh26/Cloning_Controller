@@ -8,6 +8,8 @@
 :-dynamic agent_type/2.
 :-dynamic agent_inherit/2.
 :-dynamic need_train/1.
+:-dynamic agent_visit/2.
+:-dynamic all_nodes/1.
 
 :-dynamic parent/1.
 parent('P').
@@ -17,18 +19,28 @@ starttar:-
     start_tartarus(localhost,15004,30),
     retractall(need_train(_)),
     assert(need_train([2])),
-   retractall(platform_number(_)),
-   assert(platform_number(4)).
+    
+    assert(all_nodes([15000,15001,15002,15003,15004,15005,15006,15007,15008,15009,15010,15011,15012,15013,15014,15015,15016,15017,15018,15019])),
+   
+    retractall(platform_number(_)),
+    assert(platform_number(4)).
 
 attachneighbour:-
-    assert(node_neighbours([15007,15015,15018,15010,15001,15002,15011,15016,15003,15013,15009,15005,15019,15006,15017,15008,15014,15000,15012])).
+    assert(node_neighbours([15015,15005,15014,15007,15008,15003])).
 
 startcontroller:-
     consult("cloningControllerOnePort.pl"),
     start_clonning_controller(15004),
     init_need(0),
     assert(satisfied_need(0)),
-    platform_port(15004).
+    assert(pheromone_now('None')),
+    assert(pheromone_time(1)).
+
+
+my_predicate:-
+   starttar,
+   attachneighbour,
+   startcontroller.
 
 
    
