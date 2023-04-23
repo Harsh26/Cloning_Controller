@@ -41,7 +41,7 @@ clone_lifetime(10).
 clone_resource(10).
 
 :-dynamic queue_threshold/1.
-queue_threshold(4).
+queue_threshold(5).
 
 :-dynamic q_monitor_steptime/1.
 q_monitor_steptime(1003).
@@ -65,7 +65,7 @@ tau_c(0.1).
 tau_r(5).
 
 :-dynamic sigma/1.
-sigma(3).
+sigma(2).
 
 :-dynamic child/1.
 child('C').
@@ -894,6 +894,8 @@ release_agent:-
                                                 node_neighbours([H | T]), % Shuffling..
                                                 %NP is H,
                                                 phercon_neighbour(NP),
+                                                writeln('Decided NP ':NP),
+
                                                 retractall(neighbour(_)), assert(neighbour(NP)),
 
                                                 intranode_queue([Agent|Tail]), 
@@ -1266,21 +1268,26 @@ delete_pheromone_request([],_).
 
 delete_pheromone_request([H|T],X):-
         
-        pheromones_db(DB),
+        %writeln('delete_pheromone_chk1..'),
         nth0(0, H, FirstElement),
         (
             
             FirstElement = X -> 
-                delete_me(H, DB, DBnew), retractall(pheromones_db(_)), assert(pheromones_db(DBnew)),
-                writeln('New Deletion from Pheromone DB, Elements ':DBnew)
+                pheromones_db(DB),
+                %writeln('delete_pheromone_chk2..'),
+                delete_me(H, DB, DBnew), 
+                %writeln('delete_pheromone_chk3..'),
+                retractall(pheromones_db(_)), assert(pheromones_db(DBnew))
+                %writeln('New Deletion from Pheromone DB, Elements ':DBnew)
                 ;
+                %writeln('delete_pheromone_chk4..'),
                 nothing
         ),
 
         delete_pheromone_request(T, X),
         !.
 
-delete_pheromone_request([_|_],_):-
+delete_pheromone_request([_],_):-
         writeln('Delete pheromone request Failed !!'),
         !.
 
@@ -1526,12 +1533,12 @@ timer_release(ID, N):-
         (
                 (N =:= 1)->
                         (
-                                sleep(5)
+                                sleep(30)
                         )
                         ;
                         (
                                 (
-                                        (N =:= 30)->
+                                        (N =:= 300)->
                                                 (
                                                         halt
                                                 )
@@ -1655,7 +1662,7 @@ timer_release(ID, N):-
                                                         ((Pnow = 'None' ; ((PT mod PTO) =:= 0))-> release_pheromones_to_nodes_init(NN, Pheromone, N), writeln('releasing init complete') ; nothing),
                                                         
 
-                                                        Str1 = N, Str2 = ' ', Str3 = '0', Str4 = ' ', Str5 = Lenlog,
+                                                        Str1 = N, Str2 = ' ', Str3 = '0', Str4 = ' ', Str5 = Lenlog, 
 
                                                         atom_concat(Str1, Str2, W1), 
                                                         atom_concat(W1, Str3, W2),
