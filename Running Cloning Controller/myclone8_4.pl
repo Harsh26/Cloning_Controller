@@ -17,7 +17,6 @@ attachneighbour:-
 startcontroller:-
     consult("cloningController.pl"),
    %consult("cloningOriginal.pl"),
-   start_clonning_controller(15104,15204),
    platform_port(15004).
 
 %attachneighbour:-

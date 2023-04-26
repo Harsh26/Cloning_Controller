@@ -18,7 +18,11 @@
 :-dynamic my_service_reward/2.
 :-dynamic agent_resource/2.
 :-dynamic agent_type/2.
-:-dynamic need/1.
+
+:-dynamic need/1.                       % need = -1 means It will not require any need, now or in future. need = -2 means
+                                        % it wont require anything now but will require in future. need = -3 means need
+                                        % has already been satisfied. 
+
 :-dynamic agent_inherit/2.
 :-dynamic agent_visit/2.
 
@@ -30,9 +34,6 @@ ack_q([]).
 
 :-dynamic transit_req/1.
 transit_req(0).
-
-:-dynamic queue_length/1.
-queue_length(4).
 
 :-dynamic clone_lifetime/1.
 clone_lifetime(10).
@@ -75,6 +76,9 @@ agent_max_resource(100).
 
 :-dynamic agent_min_resource/1.
 agent_min_resource(10).
+
+:-dynamic type_of_agents/1.
+type_of_agents(3).
 
 :-dynamic global_mutex/1.
 :-dynamic posted_lock/1.
@@ -124,7 +128,7 @@ q_manager(P):- write('q_manager failed'),!.
 
 :- dynamic q_manager_handle_thread/3.
 
-q_manager_handle_thread(ID,(IP,NP),X):-
+q_manager_handle_thread(ID,(IP,NP),X, Tokens):-
                 
                 writeln('Atleast till qmht'),
 
@@ -137,7 +141,7 @@ q_manager_handle_thread(ID,(IP,NP),X):-
                 intranode_queue(Li), 
                 length(Li,Q_Len),
                 
-                queue_length(Len),
+                queue_threshold(Len),
                 
                 ack_q(ACK_Q),
                 length(ACK_Q,ACK_Len),
@@ -145,41 +149,41 @@ q_manager_handle_thread(ID,(IP,NP),X):-
                 platform_port(QP),
                 
                 L is Q_Len, 
-                writeln(Len), writeln(Q_Len), writeln(ACK_Len), writeln(L),
+                writeln(Len), writeln(Q_Len), writeln(ACK_Len), writeln(L), platform_token(Ptoken),
                 (
-                        (L<Len)->
+                        (L<Len, member(Ptoken, Tokens))->
                         (                       
                                 ack_q(Ack_Q),
                                 append([X],Ack_Q,Nw_Ack_Q),
                                 agent_post(platform,(IP,NP),[dq_manager_handle,_,(localhost,QP),ack(X)]),
                                 writeln('Space is available in the queue. ACK sent.'),
-                                writeln('Ack Queue':Nw_Ack_Q),
+                                %writeln('Ack Queue':Nw_Ack_Q),
                                 update_ack_queue(Nw_Ack_Q),
                                 movedagent(_,(localhost, NP), X)
                         )
                         ;
                         (
                                 agent_post(platform,(IP,NP),[dq_manager_handle,_,(localhost,QP),nack(X)]),
-                                writeln('No space is available in queue. NAK sent...')
+                                writeln('No space is available in queue or Tokens do not match. NAK sent...')
                         )
                 ),
                 
                 mutex_unlock(GPOST),
                 !.
 
-q_manager_handle_thread(ID,(IP,NP),X):-
+q_manager_handle_thread(ID,(IP,NP),X, _):-
                 writeln('Q_maanger_handle_thread failed !!'), !.
 
 :- dynamic q_manager_handle/3.
 
-q_manager_handle(_,(IP,NP),recv_agent(X)):-
+q_manager_handle(_,(IP,NP),recv_agent(X, Token)):-
 
                 writeln('Arrived q_manager_handle atleast'),
-                thread_create(q_manager_handle_thread(ID, (IP, NP), X),ID,[detached(false)]),
+                thread_create(q_manager_handle_thread(ID, (IP, NP), X, Token),ID,[detached(false)]),
                 
                 !.
                 
-q_manager_handle(guid,(IP,P),recv_agent(X)):- write('Q-manager handler failed!!'),!.
+q_manager_handle(guid,(IP,P),recv_agent(X, _)):- write('Q-manager handler failed!!'),!.
 
 %%=============================== Q-Manager handler ends=======================================
 
@@ -650,15 +654,22 @@ dq_manager_thread_nak(ID, (IP, P), X):-
 
                 posted_lock_dq(GPOSTT),
                 mutex_lock(GPOSTT),
+                
+                intranode_queue(I),
+                length(I, Len),
 
-                agent_list_new(Aglist),agent_list_new([H|T]),
-                ((member(X, Aglist), H = X)->
-                        writeln('Migration Denied (NAK) by the receiver'),
-                        migrate_typhlet(X)
+                (Len > 0 -> 
+                        intranode_queue([H|T]), agent_list_new(Aglist),
+                        ((member(X, Aglist), H = X)->
+                                writeln('Migration Denied (NAK) by the receiver'),
+                                migrate_typhlet(X)
+                                ;
+                                nothing
+                        )
                         ;
                         nothing
                 ),
-
+                
                 mutex_unlock(GPOSTT),
 
                 !.
@@ -740,7 +751,10 @@ leave_queue(Agent,NIP,NPort):-
 
                 platform_port(From_P),
                 neighbour(NP),
-                agent_post(platform,(localhost,NP),[q_manager_handle,_,(localhost,From_P),recv_agent(Agent)]),
+                
+                agent_token(Agent, Token),
+
+                agent_post(platform,(localhost,NP),[q_manager_handle,_,(localhost,From_P),recv_agent(Agent, Token)]),
                 writeln('Transit request sent':Agent:NP),
 
                 mutex_unlock(GMID),
@@ -895,6 +909,7 @@ release_agent:-
                                                 %NP is H,
                                                 phercon_neighbour(NP),
                                                 writeln('Decided NP ':NP),
+
 
                                                 retractall(neighbour(_)), assert(neighbour(NP)),
 
@@ -1524,6 +1539,61 @@ sanitize(Aglist, I, Result):-
         list_to_set(Intersection, Result).
 
 
+frequencies(L, F) :-
+    empty_assoc(E),
+    frequencies_helper(L, E, A),
+    assoc_to_list(A, P),
+    sort(2, @>=, P, F).
+
+frequencies_helper([], A, A).
+frequencies_helper([H|T], A0, A) :-
+    (   get_assoc(H, A0, V)
+    ->  V1 is V+1, put_assoc(H, A0, V1, A1)
+    ;   put_assoc(H, A0, 1, A1)
+    ),
+    frequencies_helper(T, A1, A).
+
+freq_list(F, L) :-
+    freq_list(F, [], L).
+
+freq_list([], Acc, L) :-
+    reverse(Acc, L).
+freq_list([_-Freq|T], Acc, L) :-
+    freq_list(T, [Freq|Acc], L).
+
+
+sorted_pairs(Pairs, SortedPairs) :- sort(Pairs, SortedPairs).
+
+get_agent_types(AgentTypes) :-
+    intranode_queue(Agents),
+    bagof(Type, Agent^(member(Agent, Agents), agent_type(Agent, Type)), AgentTypes).
+
+give_data(PerAgentPopulation):-
+        intranode_queue(I),
+        length(I, Len),
+        (Len > 0 ->
+
+                get_agent_types(AgentTypes),
+                frequencies(AgentTypes, PerAgentPopulation),
+                %freq_list(Freqs, PerAgentPopulation),
+                writeln('PerAgentPopulation ':PerAgentPopulation)
+
+                ;
+
+                PerAgentPopulation = [1-0, 2-0, 3-0],
+                nothing
+        ),
+        !.
+
+give_data(_):-
+        writeln('Give data failed !!'),
+        !.
+
+
+pair_to_atom(Key-Value, Atom) :-
+    atomic_list_concat([Key, Value], '-', Atom).
+
+
 :-dynamic timer_release/2.
 
 timer_release(ID, N):-
@@ -1538,7 +1608,7 @@ timer_release(ID, N):-
                         ;
                         (
                                 (
-                                        (N =:= 300)->
+                                        (N =:= 10)->
                                                 (
                                                         halt
                                                 )
@@ -1574,11 +1644,17 @@ timer_release(ID, N):-
         writeln(Rsan),
         
         satisfied_need(SN), 
+        
+        need(TmpNeed), % remove later
+        ((N = 125, TmpNeed \== -1) -> retractall(need(_)), assert(need(0)) ; nothing), % remove later, just to check explosion of PerAgentPopulation
+        
         need(Need),
-                
-        ((Need =:= 0 ; SN =:= 1)->(
 
-                need_train([H|T]),
+        ((Need =:= 0 ; SN =:= 1)->(
+                
+                need_train(Need_Train),
+                
+                (N = 125 -> H = 3 ; random_member(H, Need_Train)), % modify this later, just to check explosion of PerAgentPopulation
 
                 writeln('***************************************************************************'),
                 writeln('Platform NEEDS the service of Agent ':H),
@@ -1586,10 +1662,6 @@ timer_release(ID, N):-
 
                 retractall(need(_)),
                 assert(need(H)),
-
-                enqueue(H, T, Tn),                 
-                retractall(need_train(_)), 
-                assert(need_train(Tn)),
 
                 retractall(satisfied_need(_)),
                 assert(satisfied_need(0))
@@ -1618,15 +1690,22 @@ timer_release(ID, N):-
                                 retractall(pheromone_now(_)), assert(pheromone_now('None')),
                                 retractall(pheromone_time(_)), assert(pheromone_time(1)),
                                 
-                                Str1 = N, Str2 = ' ', Str3 = '1', Str4 = ' ', Str5 = Lenlog,
+                                give_data(AgentData),
+                                writeln('AgentData ':AgentData),
+                                maplist(pair_to_atom, AgentData, Atoms),
+                                atomic_list_concat(Atoms, ' ', AtomicList),
+                                writeln('AtomicList ':AtomicList),
+
+                                Str1 = N, Str2 = ' ', Str3 = '1', Str4 = ' ', Str5 = Lenlog, Str6 = ' ', Str7 = AtomicList,
 
                                 atom_concat(Str1, Str2, W1), 
                                 atom_concat(W1, Str3, W2),
                                 atom_concat(W2, Str4, W3),
                                 atom_concat(W3, Str5, W4),
+                                atom_concat(W4, Str6, W5),
+                                atom_concat(W5, Str7, W6),
                                 
-                                %write(Stream, W4), nl(Stream)
-                                send_log(_, W4)
+                                send_log(_, W6)
                         )
                         ;
                         (
@@ -1662,15 +1741,22 @@ timer_release(ID, N):-
                                                         ((Pnow = 'None' ; ((PT mod PTO) =:= 0))-> release_pheromones_to_nodes_init(NN, Pheromone, N), writeln('releasing init complete') ; nothing),
                                                         
 
-                                                        Str1 = N, Str2 = ' ', Str3 = '0', Str4 = ' ', Str5 = Lenlog, 
+                                                        give_data(AgentData),
+                                                        writeln('AgentData ':AgentData),
+                                                        maplist(pair_to_atom, AgentData, Atoms),
+                                                        atomic_list_concat(Atoms, ' ', AtomicList),
+                                                        writeln('AtomicList ':AtomicList),
+
+                                                        Str1 = N, Str2 = ' ', Str3 = '0', Str4 = ' ', Str5 = Lenlog, Str6 = ' ', Str7 = AtomicList,
 
                                                         atom_concat(Str1, Str2, W1), 
                                                         atom_concat(W1, Str3, W2),
                                                         atom_concat(W2, Str4, W3),
                                                         atom_concat(W3, Str5, W4),
+                                                        atom_concat(W4, Str6, W5),
+                                                        atom_concat(W5, Str7, W6),
                                                         
-                                                        %write(Stream, W4), nl(Stream)
-                                                        send_log(_,W4)
+                                                        send_log(_, W6)
                                 )
                         )
         ),

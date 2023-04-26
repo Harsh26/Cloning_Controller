@@ -10,7 +10,6 @@ start:-
    %consult("cloningController.pl"),
    consult("cloningOriginal.pl"),
    start_tartarus(localhost,15000,30),
-   start_clonning_controller(15100,15200),
    assert(neighbour(15001,15101)),
    create_mobile_agent(agent1,(localhost,15000),handler1,[30,32]),
    retractall(agent_resource(_,_)), assert(agent_resource(guid,100)), retractall(agent_max_resource(_,_)), assert(agent_max_resource(guid,100)),

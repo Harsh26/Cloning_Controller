@@ -1,8 +1,9 @@
 
 import matplotlib.pyplot as plt
-
+import math
 import re
 
+MaxReqPossible = 48
 
 res = []
 
@@ -19,7 +20,7 @@ with open("server_log.txt", "r") as f:
             #print(line[match.end():], end=" ")
             res.append(line[match.end():])
 
-#print(res)
+# print(res)
 
 result = []
 
@@ -27,10 +28,12 @@ result = []
 for string in res:
     # Split string into list of strings
     int_list = string.split()
-    # Convert strings to integers
-    int_list = [int(x) for x in int_list]
+    # Convert first three strings to integers
+    int_list = [int(x) for x in int_list[:3]]
 
     result.append(int_list)
+
+
 
 #for element in result:
 #    print(element, end=', ')
@@ -38,12 +41,21 @@ for string in res:
 mp = {}
 
 for e in result:
-    if 1 <= e[0] <= 200:
+    if 1 <= e[0] <= 500:
         if e[0] not in mp:
-            mp[e[0]] = [e[1], e[2]]
+            if e[1] == 0:
+                mp[e[0]] = [e[1], e[2], 1]
+            else:
+                mp[e[0]] = [e[1], e[2], 1]
+                
         else:
-            mp[e[0]][0] += e[1]
+            if e[1] == 0:
+                mp[e[0]][0] += e[1]
+            else:
+                mp[e[0]][0] += (e[1])
+                
             mp[e[0]][1] += e[2]
+            mp[e[0]][2] += 1
 
 x = []
 y1 = []
@@ -52,7 +64,7 @@ y2 = []
 for k, v in mp.items():
     #print(f"{k}: {v[0]} {v[1]}")
     x.append(k)
-    y1.append(v[0])
+    y1.append(math.ceil( (v[0]/v[2]) * MaxReqPossible ))
     y2.append(v[1])
 
 

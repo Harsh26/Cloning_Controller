@@ -85,7 +85,6 @@ agent_min_resource(10).
 %---------------------Declarations End----------------------------------------%
 
 
-start_clonning_controller(EP,DP):-
                                 %enqueue_port(EP),
                                 %dequeue_port(DP),
 

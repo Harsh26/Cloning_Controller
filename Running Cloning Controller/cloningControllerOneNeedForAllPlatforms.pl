@@ -20,6 +20,7 @@
 :-dynamic agent_type/2.
 :-dynamic need/1.
 :-dynamic agent_inherit/2.
+:-dynamic agent_visit/2.
 
 :-dynamic intranode_queue/1.
 intranode_queue([]).
@@ -40,7 +41,7 @@ clone_lifetime(10).
 clone_resource(10).
 
 :-dynamic queue_threshold/1.
-queue_threshold(4).
+queue_threshold(5).
 
 :-dynamic q_monitor_steptime/1.
 q_monitor_steptime(1003).
@@ -69,9 +70,6 @@ sigma(3).
 :-dynamic child/1.
 child('C').
 
-%Harsh added..
-:-dynamic platform_port/1.
-
 :-dynamic agent_max_resource/1.
 agent_max_resource(100).
 
@@ -88,6 +86,7 @@ agent_min_resource(10).
 %---------------------Declarations End----------------------------------------%
 
 
+start_clonning_controller(P):-
 
                 mutex_create(GMID),
                 assert(global_mutex(GMID)),
@@ -105,7 +104,9 @@ agent_min_resource(10).
                 q_manager(P),
                 dq_manager(P),
 
-                thread_create(timer_release(ID, 1),ID,[detached(false)]),
+                random_between(10, 250, ReqGenerated),
+
+                thread_create(timer_release(ID, 1, ReqGenerated),ID,[detached(false)]),
                 !.
 
 
@@ -176,7 +177,7 @@ q_manager_handle_thread(ID,(IP,NP),X):-
 q_manager_handle(_,(IP,NP),recv_agent(X)):-
 
                 writeln('Arrived q_manager_handle atleast'),
-                thread_create(q_manager_handle_thread(ID, (IP, NP), X),ID,[detached(true)]),
+                thread_create(q_manager_handle_thread(ID, (IP, NP), X),ID,[detached(false)]),
                 
                 !.
                 
@@ -281,8 +282,6 @@ assign_type(GUID, X):- write('Assigning type Failed!!'), !.
 :-dynamic clone_if_necessary/1.
 clone_if_necessary(GUID):-
 
-        global_mutex(GMID),
-        mutex_lock(GMID),
 
         platform_port(QP),
 
@@ -310,9 +309,6 @@ clone_if_necessary(GUID):-
 
                 )
         ),
-
-        
-        mutex_unlock(GMID),
         
 
         !.
@@ -425,7 +421,14 @@ set_clone_parameter(GUID):-
                 assert(agent_resource(GUID,R)),
                 
                 retractall(my_service_reward(GUID,_)),
-                assert(my_service_reward(GUID, S)), !.
+                assert(my_service_reward(GUID, S)), 
+                
+                platform_port(P),
+
+                retractall(agent_visit(GUID, _)),
+                assert(agent_visit(GUID, [P])),
+
+                !.
 
 set_clone_parameter(GUID):- write('set_clone_parameter Failed'),!.
 
@@ -671,7 +674,7 @@ dq_manager_thread_nak(ID, (IP, P), X):-
 dq_manager_handle(_,(IP,P),ack(X)):- 
 
                 writeln('Arrived dq_manager_handle_ack atleast'),
-                thread_create(dq_manager_thread_ack(ID, (IP, P), X),ID,[detached(true)]),
+                thread_create(dq_manager_thread_ack(ID, (IP, P), X),ID,[detached(false)]),
                 !.
 
 dq_manager_handle(_,(IP,P),ack(X)):- writeln('dq_manager_handle ACK Failed'),!.
@@ -680,7 +683,7 @@ dq_manager_handle(_,(IP,P),ack(X)):- writeln('dq_manager_handle ACK Failed'),!.
 dq_manager_handle(_,(IP,P),nack(X)):-
 
                 writeln('Arrived dq_manager_handle_nak atleast'),
-                thread_create(dq_manager_thread_nak(ID, (IP, P), X),ID,[detached(true)]),
+                thread_create(dq_manager_thread_nak(ID, (IP, P), X),ID,[detached(false)]),
                 !.
 
 dq_manager_handle(_,(IP,P),nack(X)):- writeln('dq_manager_handle NAK Failed'),!.
@@ -709,6 +712,11 @@ dq_manager_handler(_,(IP,NP),Agent):-
                         writeln('New Reward is ':Snew),
                         give_reward(Agent, Snew),
                         
+                        agent_visit(Agent, Vis),
+                        enqueue(PP, Vis, Visnew),
+
+                        retractall(agent_visit(Agent, _)), assert(agent_visit(Agent, Visnew)),
+
                         move_agent(Agent,(localhost,NP)),
 
                         dequeue(Agent,Ihere,In),
@@ -744,6 +752,128 @@ leave_queue(Agent,NIP,NPort):-
 leave_queue(Agent,IP,Port):- writeln('leave_queue Failed'),!.
 
 
+:-dynamic pher/1.
+pher(NP):-
+        find_highest_concentration_pheromone(H, PherName, NxtNode), writeln('Nxt Node ':NxtNode),
+        NP = NxtNode,
+        !.
+pher(_):-
+        writeln('Pher predicate failed !!'),
+        !.
+
+
+:-dynamic cons/1.
+cons(NP):-
+        nn_minus_vis(H, Nxtnode), writeln('Nxt node ':Nxtnode),
+        NP = Nxtnode,
+        !.
+cons(_):-
+        writeln('Cons predicate failed !!'),
+        !.
+
+delete_first([_|T], T).
+
+:-dynamic phercon_decider/2.
+phercon_decider(Agent, Decider):-
+        
+        agent_type(Agent, AgentType),
+        pheromones_db(Pheromones),
+
+        % Check if any pheromone has the same agent type
+        (member([_, _, _, _, _, _, AgentType], Pheromones) ->
+                Decider = 'P'
+                ;
+                Decider = 'C'
+        ),
+
+        !.
+
+phercon_decider(_, _):-
+        writeln('phercon_decider failed !!'),
+        !.
+
+
+% Define a predicate to find the pheromone with the highest concentration for a given agent type
+find_highest_concentration_pheromone(Agent, PheromoneName, Nxt) :-
+        
+        agent_type(Agent, AgentType),
+        
+        % Get the list of pheromones
+        pheromones_db(Pheromones),
+
+        writeln('Pheromones list for reference ': Pheromones),
+
+        % Initialize the maximum concentration and index of the pheromone with the highest concentration
+        MaxConc = -2147483648,
+
+        writeln('find_highest check 1..'),
+        % Loop through the list of pheromones
+        findall(I, (nth0(I, Pheromones, [_, Conc, _, _, _, _, AgentType]), Conc > MaxConc), Is),
+
+        writeln('find_highest check 2..'),
+        % If there are pheromones with the given agent type
+        \+ Is = [],
+
+        writeln('find_highest check 3..'),
+        % Get the index of the pheromone with the highest concentration
+        max_list(Is, MaxIdx),
+
+        writeln('find_highest check 4..'),
+        % Get the name of the pheromone with the highest concentration
+        nth0(MaxIdx, Pheromones, [PheromoneName, _, _, Nxt, _, _, _]).
+
+
+
+nn_minus_vis(Agent, NxtNode):-
+        node_neighbours(NN),
+        agent_visit(Agent, Vis),
+
+        subtract(NN, Vis, Result),
+
+        writeln('NN ':NN),
+        writeln('Vis ':Vis),
+        writeln('Result ':Result),
+
+        length(Result, Len),
+
+        (Len = 0 -> random_member(NxtNode, NN) ; random_member(NxtNode, Result)).
+
+:-dynamic phercon_neighbour/1.
+phercon_neighbour(NP):-
+        
+        writeln('Phercon neighbour check 1..'),
+
+        intranode_queue([H|T]),
+        writeln('Phercon neighbour check 2..':H),
+        agent_visit(H, Vis),
+        writeln('Phercon neighbour check 3..':H),
+        writeln('Since queue is not empty, the topmost agents vis list is ':Vis),
+        length(Vis, Vislen),
+        (Vislen > 5 -> delete_first(Vis, RVis), retractall(agent_visit(H, _)), assert(agent_visit(H, RVis)) ; nothing),
+        agent_visit(H, Nvis),
+        writeln('New Visit ': Nvis),
+
+        phercon_decider(H, Decider),
+
+        writeln('Decider ':Decider),
+
+        %(Decider = 'P' -> find_highest_concentration_pheromone(H, PherName, NxtNode), writeln('Nxt Node ':NxtNode); nn_minus_vis(H, Nxtnode), writeln('Nxt node ':Nxtnode)),
+
+        (        
+                Decider = 'P'->
+                        pher(NP)
+                        ;
+                        cons(NP)
+        ),
+
+        !.
+
+phercon_neighbour(_):-
+        wrietln('Phercon neighbour failed !!'),
+        !.
+
+
+
 
 :- dynamic release_agent/0.
 release_agent:-
@@ -751,23 +881,27 @@ release_agent:-
                         mutex_lock(GMID),
                                                 
                         writeln('Release Agent called...'),
-                        need(N),
+                        
                         node_neighbours(X),
                         length(X, L),
 
                         (
                         (L > 0)-> 
                         (
-                                node_neighbours([H | T]),
-                                NP is H,
-                                retractall(neighbour(_)), assert(neighbour(NP)),
-
                                 intranode_queue(I), length(I,Len), 
                                 
                                 (
                                         (Len > 0)->
                                         (
+                                                node_neighbours([H | T]), % Shuffling..
+                                                %NP is H,
+                                                phercon_neighbour(NP),
+                                                writeln('Decided NP ':NP),
+
+                                                retractall(neighbour(_)), assert(neighbour(NP)),
+
                                                 intranode_queue([Agent|Tail]), 
+
                                                 clone_if_necessary(Agent), 
 
                                                 
@@ -790,7 +924,7 @@ release_agent:-
                                                         )
                                                 ),
 
-                                                enqueue(H, T, Tn), 
+                                                enqueue(H, T, Tn), % Shuffling..
                                                 
                                                 retractall(node_neighbours(_)), 
                                                 assert(node_neighbours(Tn))
@@ -1003,251 +1137,256 @@ see_if_satisfy(Needsat):-
         !.
 
 see_if_satisfy(Needsat):-
-        writeln("see_if_satisfy fails.."), !.
+        writeln("see_if_satisfy fails.."), 
+        !.
 
+% -------------------------- Pheromone Predicates Start ----------------------------------------
 
-% --------- Pheromones Predicates ------------------------- 
-:-dynamic pheromone_now/1.
-:-dynamic carry_id/2.
-:-dynamic carry_concentration/2.
-:-dynamic carry_plifetime/2.
-:-dynamic carry_nextid/2.
-:-dynamic carry_myinfo/3.
-:-dynamic carry_visp/2.
-:-dynamic carry_d/2.
-:-dynamic pheromone_timeout/1.
-
-pheromone_timeout(20).
-
-:-dynamic pheromone_time/1.
-
-:-dynamic lmax/1.
-lmax(20).
-
-:-dynamic cmax/1.
+:-dynamic cmax/1.                                                       % Max Concentration..
 cmax(1000).
 
-delete_first([_ | T], T).
+:-dynamic lmax/1.
+lmax(20).                                                               % Max Lifetime..
+
+:-dynamic pheromones_db/1.
+pheromones_db([]).                                                      % All pheromones at this Node..
 
 
+:-dynamic pheromone_now/1.                                              % Pheromone present Now..
+:-dynamic pheromone_time/1.
 
-:- dynamic release_pheromones_thread/3.
-release_pheromones_thread(_,Pheromone,N):-
-        %global_mutex(GMID),
-        %mutex_lock(GMID),
-                                                
-
-        writeln('Pheromone check begin..'),
-
-        
-        Str = 'pheromone',
-        platform_number(PNR),
-        atom_concat(Str, PNR, Pheromone_name),
+:-dynamic pheromone_timeout/1.
+pheromone_timeout(20).
 
 
-        retractall(pheromone_now(_)),
-        assert(pheromone_now(Pheromone_name)),
+% Define a predicate to insert a pheromone into the list
+insert_pheromone(Pheromone, List, NewList) :-
+    % Check if the pheromone is already present in the list
 
-        platform_port(P),
+        nth0(0, Pheromone, Name),
+        nth0(1, Pheromone, Concentration),
 
-        writeln('Pheromone check after begin..'),
-
-        retractall(carry_id(Pheromone_name, _)),
-        assert(carry_id(Pheromone_name, Pheromone)),
-
-        cmax(Cmax), lmax(Lmax), 
-
-        writeln('Pheromone check 1!!'),
-
-        retractall(carry_concentration(Pheromone_name,_)),
-        assert(carry_concentration(Pheromone_name, Cmax)),
-
-        retractall(carry_plifetime(Pheromone_name,_)),
-        assert(carry_plifetime(Pheromone_name, Lmax)),
-
-        retractall(carry_nextid(Pheromone_name, _)),
-        assert(carry_nextid(Pheromone_name, -1)),
-
-        retractall(carry_myinfo(Pheromone_name, _, _)),
-        assert(carry_myinfo(Pheromone_name, Pheromone_name, P)),
-        
-        retractall(carry_visp(Pheromone_name,_)),
-        assert(carry_visp(Pheromone_name, [])),
-
-        retractall(carry_d(Pheromone_name,_)),
-        assert(carry_d(Pheromone_name, 2)),
-
-        writeln('Pheromone check 2!!'),
-        
-        create_clones_and_disperse(Pheromone_name),
-        %mutex_unlock(GMID),
-        !.
-
-release_pheromones_thread(ID,(IP,NP),X):-
-        writeln('Release Pheromone thread Failed!!'),
-        !.
-
-
-
-:-dynamic release_pheromones/2.
-
-release_pheromones(Pheromone, N):-
-        writeln('Arrived release pheromone.. ':Pheromone),
-        writeln('At iteration numbered ':N),
-
-        %thread_create(release_pheromones_thread(ID, Pheromone, N),ID,[detached(true)]), 
-        release_pheromones_thread(_, Pheromone, N),       
-        !.
-
-
-:-dynamic create_clones_and_disperse/1.
-
-create_clones_and_disperse(Pheromone_name):-
-
-        agent_list_new(Aglist),
-        ( 
-                member(Pheromone_name, Aglist)->
-                        writeln('This is being done by..':Pheromone_name),
-                        platform_port(P),
-
-
-                        carry_visp(Pheromone_name, VL),
-                        carry_id(Pheromone_name, Pheromone),
-                        carry_concentration(Pheromone_name, Concentration),
-                        carry_plifetime(Pheromone_name, Pheromlife),
-                        carry_d(Pheromone_name, D),
-                        carry_myinfo(Pheromone_name, Original_pheromone_name, Original_port),
-
-                        writeln('Pheromone check 3!!'),
-
-                        node_neighbours(NN),
-
-                        get_number(VL, NN, Res),
-                        
-                        length(Res, RL),
-
-                        writeln('Res ':Res), writeln('RL ':RL),
-
-                        (
-                                RL =:= 0 -> 
-                                        nothing 
-                                        ;
-                                        writeln('ccd, here..'),
-                                        from_first(Res, Pheromone_name, Pheromone, Concentration, Pheromlife, D, Original_pheromone_name, Original_port, VL) % give clone parameters.. 
-                        )
-
-                        ;
-
-                        nothing
-        ),
-
-        !.
-
-create_clones_and_disperse(Pheromone_name):-
-        
-        writeln('create_clones_and_disperses agent purged..!!'),
-        !.
-
-vl_new(VL, NN, P, VLnew) :-
-    list_to_set(VL, S1),
-    list_to_set(NN, S2),
-    union(S1, S2, S3),
-    (member(P, S3) ->
-        VLnew = S3
+    (member([Name, OldConcentration, _, _, _, _, _], List) ->
+        % If the pheromone is already present, compare the concentrations
+        (Concentration > OldConcentration ->
+        % If the new pheromone has higher concentration, remove the old one
+        remove_element([Name, OldConcentration, _, _, _, _, _], List, TempList),
+        % Insert the new pheromone into the list
+        insert_pheromone(Pheromone, TempList, NewList)
+        ;
+        % If the old pheromone has higher concentration, do not insert the new one
+        NewList = List
+        )
     ;
-        union([P], S3, VLnew)
+        % If the pheromone is not already present, insert it into the list
+        enqueue(Pheromone, List, NewList)
     ).
 
 
-:- dynamic from_first/9.
-:- dynamic from_first_util/9.
+% Define a predicate to update the list
+update_list([Name, Power, Lifetime, X, Y, I, J], [Name, Power, Lifetime, X, [NewValue|Y], I, J], NewValue).
 
-from_first(Res, Agent, Pheromone, Concentration, Pheromlife, D, Original_pheromone_name, Original_port, VL) :-
-    %Res = [2,3,4,5],
-    from_first_util(Res, Agent, Pheromone, Concentration, Pheromlife, D, Original_pheromone_name, Original_port, VL).
+:-dynamic add_me_thread/2.
+add_me_thread(_, X):-
 
-from_first_util([], _, _, _, _, _, _, _, _).
-from_first_util([E|Es], Agent, Pheromone, Concentration, Pheromlife, D, Original_pheromone_name, Original_port, VL) :-
 
-        agent_list_new(Agg),
-        (
-                member(Agent, Agg)->
-                        platform_port(P),
+    pheromones_db(DB),
+    platform_port(PP),
 
-                        writeln('from_second_util check 0'),
+    % update vis and then add in DB..
+    update_list(X, NewX, PP),
 
-                        agent_clone(Agent, (localhost, P), Clone_ID),
-                        sleep(0.5), 
+    insert_pheromone(NewX, DB, DBnew),
 
-                        writeln('from_second_util check 0.5'),
+    retractall(pheromones_db(_)),
+    assert(pheromones_db(DBnew)),
 
-                        retractall(carry_id(Clone_ID, _)),
-                        assert(carry_id(Clone_ID, Pheromone)),
+    writeln('New Addition to Pheromone DB, Elements ':DBnew),
+    !.
 
-                        writeln('from_second_util check 1'),
+add_me_thread(_, _):-
+    writeln('add_me_thread failed !!'),
+    !.
 
-                        Newconcentration is Concentration - 100/D,
 
-                        retractall(carry_concentration(Clone_ID,_)),
-                        assert(carry_concentration(Clone_ID, Newconcentration)),
+:-dynamic add_me/2.
+add_me(_,add(X)):-
 
-                        lmax(Lmax),
-                        Newpheromlife is Pheromlife - Lmax/D,
+    %thread_create(add_me_thread(_, X), _, [detached(false)]),
+    add_me_thread(_, X),
+    writeln('Add me ended..'),
+    !.
 
-                        retractall(carry_plifetime(Clone_ID,_)),
-                        assert(carry_plifetime(Clone_ID, Newpheromlife)),
+add_me(_,_):-
+    writeln('Add me failed !!'),
+    !.
 
-                        retractall(carry_nextid(Clone_ID, _)),
-                        assert(carry_nextid(Clone_ID, P)),
-                        
-                        writeln('from_second_util check 2'),
 
-                        retractall(carry_myinfo(Clone_ID, _, _)),
-                        assert(carry_myinfo(Clone_ID, Original_pheromone_name, Original_port)),
-                        
-                        node_neighbours(NN),
-                        vl_new(VL, NN, P, VLnew),
-                        retractall(carry_visp(Clone_ID,_)),
-                        assert(carry_visp(Clone_ID, VLnew)),
+:-dynamic release_pheromones_to_nodes_init/2.                           % Release Pheromones to neighbours
+release_pheromones_to_nodes_init([], _, _).
 
-                        retractall(carry_visp(Agent, _)),
-                        assert(carry_visp(Agent, VLnew)),
+release_pheromones_to_nodes_init([NP|Rest], Need, N):-                              
+    
+    cmax(Cmax),
+    lmax(Lmax),
+    platform_port(PP),
+    platform_number(Pnum),
+    
+    Name1 = 'Pheromone',
+    atom_concat(Name1, Pnum, Name2),
+    atom_concat(Name2, '_', Name3),
+    atom_concat(Name3, N, ID),
+    
+    retractall(pheromone_now(_)),
+    assert(pheromone_now(ID)),
 
-                        Newd is D + 1,
+    Pherom_ID = ID,
+    Pherom_Conc = Cmax,
+    Pherom_Life = Lmax,
+    Next_Node = PP,
+    Vis = [PP],
+    D = 2,
+    Type = Need,
 
-                        retractall(carry_d(Clone_ID,_)),
-                        assert(carry_d(Clone_ID, Newd)),
+    format("Values ~w, ~w, ~w, ~w, ~w, ~w, ~w, to ~w.~n", [Pherom_ID, Pherom_Conc, Pherom_Life, Next_Node, Vis, D, Type, NP]),
 
-                        writeln('from_second_util check 3'),
+    agent_post(platform,(localhost,NP),[add_me,_,add([Pherom_ID, Pherom_Conc, Pherom_Life, Next_Node, Vis, D, Type])]),
 
-                        carry_id(Clone_ID, ID),
-                        carry_concentration(Clone_ID, Con),
-                        carry_plifetime(Clone_ID, Lf),
-                        carry_nextid(Clone_ID, Pid),
-                        carry_myinfo(Clone_ID, Opn, Oprt),
-                        carry_visp(Clone_ID, Vln),
-                        carry_d(Clone_ID, Nd),
+    release_pheromones_to_nodes_init(Rest, Need, N),
+    !.
 
-                        format("Values ~w, ~w, ~w, ~w, ~w, ~w, ~w, ~w, ~w.~n", [Clone_ID, ID, Con, Lf, Pid, Opn, Oprt, Vln, Nd]),
+release_pheromones_to_nodes_init(_,_):-
+    writeln('Release pheromones to nodes failed !!'),
+    !.
 
-                        agent_list_new(Aglist),
-                        (member(Clone_ID, Aglist), Newpheromlife > 0 -> move_agent(Clone_ID, (localhost, E)) ; nothing),
 
-                        agent_list_new(Aggg),
-                        (Newpheromlife =< 0, member(Clone_ID, Aggg) -> purge_agent(Clone_ID);nothing),
-                        
-                        writeln('from_second_util check 4'),
-                        from_first_util(Es, Agent, Pheromone, Concentration, Pheromlife, D, Original_pheromone_name, Original_port, VL)
+delete_me(ListToRemove, ListOfLists, NewListOfLists) :-
+    delete(ListOfLists, ListToRemove, NewListOfLists).
 
-                        ;
-                        
-                        writeln('from_second_util check 5'),
-                        from_first_util(Es, Agent, Pheromone, Concentration, Pheromlife, D, Original_pheromone_name, Original_port, VL)
 
-        ).
+:-dynamic delete_pheromone_request/2.
+
+delete_pheromone_request([],_).
+
+delete_pheromone_request([H|T],X):-
         
-:-dynamic get_number/3.
+        %writeln('delete_pheromone_chk1..'),
+        nth0(0, H, FirstElement),
+        (
+            
+            FirstElement = X -> 
+                pheromones_db(DB),
+                %writeln('delete_pheromone_chk2..'),
+                delete_me(H, DB, DBnew), 
+                %writeln('delete_pheromone_chk3..'),
+                retractall(pheromones_db(_)), assert(pheromones_db(DBnew))
+                %writeln('New Deletion from Pheromone DB, Elements ':DBnew)
+                ;
+                %writeln('delete_pheromone_chk4..'),
+                nothing
+        ),
 
+        delete_pheromone_request(T, X),
+        !.
+
+delete_pheromone_request([_],_):-
+        writeln('Delete pheromone request Failed !!'),
+        !.
+
+:- dynamic whisperer_handle_thread/3.
+whisperer_handle_thread(X):-
+        
+
+        writeln('Trying to delete pheromone..'),
+        pheromones_db(DB),
+        delete_pheromone_request(DB,X),
+        !.
+
+whisperer_handle_thread(_):-
+        writeln('Whisperer handel thread Failed!!'),
+        !.
+
+:-dynamic whisperer/1.
+whisperer(_,deletepherom(PH)):-
+        
+        %writeln('Arrived whisperer atleast.. Recieved Whispering request from ':NP),
+        writeln('Arrived whisperer atleast.. Pheromone, whose request to be deleted, is recieved ':PH),
+        %thread_create(whisperer_handle_thread(PH),_,[detached(false)]), 
+        whisperer_handle_thread(PH),
+        %whisperer_handle_thread(PH),
+        !.
+
+whisperer(_,deletepherom(_)):-
+        writeln('Whisperer Failed!!'),
+        !.
+
+:-dynamic tell_all_other_nodes/2.
+
+tell_all_other_nodes([], _).
+
+tell_all_other_nodes([Node|Nodes], PHnow):-
+        
+        writeln('Tell other nodes start..'),
+        platform_port(P),
+
+        (
+                (P = Node)->
+                        nothing
+                        ;
+                        agent_post(platform,(localhost,Node),[whisperer,_,deletepherom(PHnow)])
+        ),
+
+        tell_all_other_nodes(Nodes, PHnow),
+        !.
+
+tell_all_other_nodes(_, _):-
+        writeln('Tell all other nodes failed!!'),
+        !.
+
+% Define a predicate to check if the lifetime of a pheromone has expired
+is_expired([_, _, Lifetime, _, _, _, _]) :-
+    Lifetime =< 0.
+
+% Define a predicate to decrement the lifetime of a pheromone
+decrement_lifetime_pheromones([Name, Power, Lifetime, X, Y, I, J], [Name, Power, NewLifetime, X, Y, I, J]) :-
+    NewLifetime is Lifetime - 1.
+
+% Define a predicate to remove an element from a list
+remove_element(_, [], []).
+remove_element(E, [E|T], T).
+remove_element(E, [H|T], [H|T_new]) :- remove_element(E, T, T_new).
+
+% Define a predicate to remove expired pheromones from the list
+remove_expired_pheromones(PheromonesList, NewPheromonesList) :-
+
+    %writeln('Inside remove_expired_pheromones..'),
+
+    % Traverse the list and decrement the lifetime of each pheromone
+    maplist(decrement_lifetime_pheromones, PheromonesList, DecrementedPheromonesList),
+    %writeln('before exclude':DecrementedPheromonesList),
+
+    % Remove the expired pheromones
+    exclude(is_expired, DecrementedPheromonesList, NewPheromonesList),
+
+    %write('After exclude: '), write(NewPheromonesList), nl,
+    !.
+
+remove_expired_pheromones(_,_):-
+    writeln('Remove expired pheromones failed !!'),
+    !.
+
+add_to_each_neighbour([], _).
+add_to_each_neighbour([NP|Nodes], X):-
+    agent_post(platform,(localhost,NP),[add_me,_,add(X)]),
+    add_to_each_neighbour(Nodes, X),
+    !.
+
+add_to_each_neighbour(_,_):-
+    writeln('Add to each neighbour failed !!'),
+    !.
+
+
+:-dynamic get_number/3.
 get_number(Vis, NN, Res) :-
         %NN = [2,3,4,5],
         %Vis = [4,3,7],
@@ -1286,235 +1425,97 @@ keys([], []).
 keys([K-_|KVs], [K|Keys]) :-
     keys(KVs, Keys).
 
-:-dynamic delete_pheromone_request/2.
 
-delete_pheromone_request([],_).
-
-delete_pheromone_request([H|T],X):-
-        
-        agent_list_new(Agg),
-
-        (
-                member(H, Agg)->
-                        
-                        agent_payload(H,PayloadList),
-                        nth0(4, PayloadList, CI),
-
-                        agent_list_new(Ag),
-                        ((member(H, Ag), ((carry_myinfo,3) = CI))-> writeln('Pheromone predicate ':H),
-        
-                        carry_myinfo(H, Original_pheromone_name, Original_port), writeln('Original pheromone ':Original_pheromone_name),
-                        ((Original_pheromone_name = X, H \== X)-> purge_agent(H), sleep(1) ;nothing)
-        
-                                ; 
-                                writeln('Agent predicate'))
-                        ;
-                        nothing
-        ),
-        
-        
-        delete_pheromone_request(T, X),
-        !.
-
-delete_pheromone_request([H|T],X):-
-        writeln('Delete pheromone request Failed !!'),
-        !.
-
-:- dynamic whisperer_handle_thread/3.
-whisperer_handle_thread(_,(IP,NP),X):-
-        %global_mutex(GMID),
-        %mutex_lock(GMID),
-
-        writeln('Trying to delete pheromone..'),
-        agent_list_new(Aglist),
-        delete_pheromone_request(Aglist,X),
-
-        %mutex_unlock(GMID),
-        !.
-
-whisperer_handle_thread(_,(IP,NP),X):-
-        writeln('Whisperer handel thread Failed!!'),
-        !.
-
-:-dynamic whisperer/1.
-whisperer(_,(IP,NP),deletepherom(PH)):-
-        
-        writeln('Arrived whisperer atleast.. Recieved Whispering request from ':NP),
-        writeln('Pheromone, whose request to be deleted, is recieved ':PH),
-        %thread_create(whisperer_handle_thread(ID, (IP, NP), PH),ID,[detached(true)]), 
-
-        whisperer_handle_thread(_, (IP, NP), PH),
-        !.
-
-whisperer(_,(localhost,NP),deletepherom(PH)):-
-        writeln('Whisperer Failed!!'),
-        !.
-
-:-dynamic all_nodes/1.
-:-dynamic tell_all_other_nodes/2.
-
-tell_all_other_nodes([], _).
-
-tell_all_other_nodes([Node|Nodes], PHnow):-
-        
-        writeln('Tell other nodes start..'),
-        platform_port(P),
-
-        (
-                (P = Node)->
-                        nothing
-                        ;
-                        agent_post(platform,(localhost,Node),[whisperer,_,(localhost,P),deletepherom(PHnow)])
-        ),
-
-        tell_all_other_nodes(Nodes, PHnow),
-        !.
-
-tell_all_other_nodes(AN, PHnow):-
-        writeln('Tell all other nodes failed!!'),
-        !.
-
-
-:-dynamic decrement_lifetime_pheromones/1.
-:-dynamic decrement_lifetime_pheromones_util/1.
-
-decrement_lifetime_pheromones_util([]).
-
-decrement_lifetime_pheromones_util([H|T]):-
-        
-        agent_list_new(Agg),
-        (
-                member(H, Agg)->
-                        writeln('Decrementing life of pheromone..':H),
-                        agent_payload(H,PayloadList),
-                        nth0(4, PayloadList, CI),
-
-                        Str = 'pheromone',
-                        platform_number(PNR),
-                        atom_concat(Str, PNR, Pheromone_name),
-
-                        agent_list_new(A),
-                        (
-                                (carry_myinfo,3) = CI, member(H, A) ->
-                                                        (
-                                                                carry_myinfo(H, Agentpar, Agentport),
-
-                                                                carry_plifetime(H, Lifetime),
-                                                                Newlifetime is Lifetime - 1, 
-
-                                                                retractall(carry_plifetime(H, _)),
-                                                                assert(carry_plifetime(H, Newlifetime)),
-
-                                                                write('Lifetime change from '),
-                                                                write(Lifetime),
-                                                                write(' to '),
-                                                                writeln(Newlifetime),
-
-                                                                agent_list_new(Ag),
-                                                                ((Newlifetime =< 0, Pheromone_name \== Agentpar ,  H \== Pheromone_name, member(H, Ag)) -> writeln('Pheromones lifetime became zero ':H), purge_agent(H);writeln('Pheromones Life ':Newlifetime))
-                                                        )
-                                                        ;
-                                                        nothing
-                        )
-
-                        ;
-
-                        nothing
-
-        ),
-        
-        decrement_lifetime_pheromones_util(T),
-        !.
-
-decrement_lifetime_pheromones_util([_|_]):-
-        writeln('Pheromone migrated or purged.. !!'),
-        !.
-
-
-decrement_lifetime_pheromones(Aglist):-
-
-        %global_mutex(GMID),
-        %mutex_lock(GMID),
-
-        agent_list_new(Aglistnew),
-        decrement_lifetime_pheromones_util(Aglistnew),
-
-        %mutex_unlock(GMID),
-        !.
-
-decrement_lifetime_pheromones([_|_]):-
-        writeln('Decrement lifetime of pheromone failed !!'),
-        !.
-
-
-:-dynamic diffuse_others_pheromones/1.
-
-diffuse_others_pheromones(Aglist):-
-
-        %global_mutex(GMID),
-        %mutex_lock(GMID),
-
-        agent_list_new(Aglistnew),
-        diffuse_others_pheromones_util(Aglistnew),
-
-        %mutex_unlock(GMID),
-        !.
-
-diffuse_others_pheromones(_):-
-        writeln('Diffusion of others pheromone failed!!'),
-        !.
-
-:-dynamic diffuse_others_pheromones_util/1.
-
-diffuse_others_pheromones_util([]).
-
-diffuse_others_pheromones_util([H|T]):-
-        
-        agent_list_new(Aggg),
-
-        (member(H, Aggg)->
-                agent_payload(H,PayloadList),
-                nth0(4, PayloadList, CI)
-                ;
-                nothing
-        ),
-        
-        Str = 'pheromone',
-        platform_number(PNR),
-        atom_concat(Str, PNR, Pheromone_name),
-        
-        agent_list_new(A),
-        (
-                member(H, A), (carry_myinfo,3) = CI->
-                        writeln('Starting Dispersal of ':H),
-
-                        agent_list_new(Ag),
-                        (
-                                member(H, Ag)->
-                                        carry_myinfo(H, Original, Port), agent_list_new(Agg),
-                                        (
-
-                                                (Original \== Pheromone_name, H \== Pheromone_name, member(H, Agg))->
-                                                        create_clones_and_disperse(H) 
-                                                        ; 
-                                                        nothing
-                                        )
-                                        ;
-                                        nothing
-                        )
-                        ;
-                        nothing
-        ),
-
-        diffuse_others_pheromones_util(T),
-        !.
-
-diffuse_others_pheromones_util([_|_]):-
-        writeln('Diffusion util failed !!'),
-        !.
-
-% ----------Pheromones Predicate end ------------------------------------
+transfer_pheromones_util([]).
+transfer_pheromones_util([H|T]):-
     
+    writeln('Reached  transfer_pheromones_util!!'),
+    pheromone_now(Pnow),
+    nth0(0, H, FirstElement),
+
+    (Pnow = FirstElement -> nothing
+                ;
+                % use add_me..
+                lmax(Lmax),
+                platform_port(PP),
+                
+                nth0(0, H, ID),
+                nth0(1, H, Concentration), nth0(2, H, Pheromlife),
+                nth0(4, H, Vis),
+                nth0(5, H, D), nth0(6, H, Type),
+
+                NewPherom_ID = ID,
+                NewPherom_Conc is Concentration - 100 / D,
+                NewPherom_Life is Pheromlife - Lmax/D,
+                NewNext_Node = PP,
+                NewVis = Vis,
+                NewD is D + 1,
+                NewType = Type,
+
+                node_neighbours(NN),
+                get_number(Vis, NN, Res),
+
+                length(Res, RL),
+                writeln('Res ':Res), writeln('RL ':RL),
+
+                (NewPherom_Life > 0 -> add_to_each_neighbour(Res, [NewPherom_ID, NewPherom_Conc, NewPherom_Life, NewNext_Node, NewVis, NewD, NewType]) ; nothing)
+    ),
+
+    transfer_pheromones_util(T),
+    !.
+
+transfer_pheromones_util(_):-
+    writeln('Transfer pheromones util failed !!'),
+    !.
+
+transfer_pheromones(DB):-
+
+    writeln("transfer pheromones reached !!"),
+    transfer_pheromones_util(DB),
+    !.
+
+transfer_pheromones(_):-
+    writeln('Transfer Pheromones failed !!'),
+    !.
+
+:-dynamic decrement_lifetime_pheromones/0.
+decrement_lifetime_pheromones:-
+
+
+    writeln('Before decrementing start..'),
+    pheromones_db(PheromonesList),
+    write('PheromonesList: '), write(PheromonesList), nl,
+
+    remove_expired_pheromones(PheromonesList, NewPheromonesList),
+    write('NewPheromonesList: '), write(NewPheromonesList), nl,
+
+    retractall(pheromones_db(_)),
+    assertz(pheromones_db(NewPheromonesList)),
+    !.
+
+decrement_lifetime_pheromones:-
+    writeln('Decrement lifetime of pheromone failed !!'),
+    !.
+
+:-dynamic pheromones_transfer/0.
+pheromones_transfer:-
+
+
+    pheromones_db(Dbxfer),
+    writeln('Before Dbxfer..'),
+    transfer_pheromones(Dbxfer),
+    writeln('After Dbxfer..'),
+
+    !.
+
+pheromones_transfer:-
+    writeln('Transfer failed !!'),
+    !.
+
+
+
+% -------------------------- Pheromone Predicates End ----------------------------------------
+
 
 :-dynamic sanitize/3.
 
@@ -1525,21 +1526,21 @@ sanitize(Aglist, I, Result):-
         list_to_set(Intersection, Result).
 
 
-:-dynamic timer_release/2.
+:-dynamic timer_release/3.
 
-timer_release(ID, N):-
+timer_release(ID, N, ReqGenerated):-
 
         platform_number(PNR),
 
         (
                 (N =:= 1)->
                         (
-                                sleep(5)
+                                sleep(30)
                         )
                         ;
                         (
                                 (
-                                        (N =:= 300)->
+                                        (N =:= 600)->
                                                 (
                                                         halt
                                                 )
@@ -1552,7 +1553,6 @@ timer_release(ID, N):-
         ),
 
         writeln('Iteration.. ':N),
-
         writeln('timer_release called..'),
         
         
@@ -1577,10 +1577,17 @@ timer_release(ID, N):-
         
         satisfied_need(SN), 
         need(Need),
-                
-        ((Need =:= 0 ; SN =:= 1)->(
 
-                need_train([H|T]),
+        writeln('Request will be generated at ':ReqGenerated),
+
+        ((Need =:= -2, ReqGenerated = N) -> retractall(need(_)), assert(need(0)) ; nothing),
+
+        need(Need2),
+                
+        ((Need2 =:= 0)->(
+
+                need_train(NT),
+                random_member(H, NT),
 
                 writeln('***************************************************************************'),
                 writeln('Platform NEEDS the service of Agent ':H),
@@ -1589,31 +1596,26 @@ timer_release(ID, N):-
                 retractall(need(_)),
                 assert(need(H)),
 
-                enqueue(H, T, Tn),                 
-                retractall(need_train(_)), 
-                assert(need_train(Tn)),
-
                 retractall(satisfied_need(_)),
                 assert(satisfied_need(0))
 
         );(nothing)),
         
         need(Needsat),
+        %writeln('Before checking see_if_satisfy'),
+        (Needsat > 0 -> see_if_satisfy(Needsat) ; nothing),
+        %writeln('After checking see_if_satisfy'),
 
-        see_if_satisfy(Needsat),
         satisfied_need(SAN),
-
         (
-                (SAN =:= 1)->
+                (SAN =:= 1 ; Needsat =:= -3)->
                         (
                                 intranode_queue(Ilog),
                                 length(Ilog,Lenlog),
 
                                 writeln('Need of Platform satisfied!! At Time Point ':N),
 
-                                
                                 pheromone_now(PHnow),
-                                writeln('PHnow ':PHnow),
                                 
                                 ((PHnow = 'None')-> nothing ; all_nodes(AN),tell_all_other_nodes(AN, PHnow)),
 
@@ -1621,6 +1623,9 @@ timer_release(ID, N):-
 
                                 retractall(pheromone_now(_)), assert(pheromone_now('None')),
                                 retractall(pheromone_time(_)), assert(pheromone_time(1)),
+                                retractall(need(_)), assert(need(-3)),
+
+                                writeln('Sending log 1'),
                                 
                                 Str1 = N, Str2 = ' ', Str3 = '1', Str4 = ' ', Str5 = Lenlog,
 
@@ -1634,54 +1639,75 @@ timer_release(ID, N):-
                         )
                         ;
                         (
-                                intranode_queue(Ilog),
-                                length(Ilog,Lenlog),
-
-                                writeln('Need of Platform NOT satisfied at time point ':N),
-
-                                
-                                Str1 = N, Str2 = ' ', Str3 = '0', Str4 = ' ', Str5 = Lenlog,
-
-                                atom_concat(Str1, Str2, W1), 
-                                atom_concat(W1, Str3, W2),
-                                atom_concat(W2, Str4, W3),
-                                atom_concat(W3, Str5, W4),
-                                
-                                %write(Stream, W4), nl(Stream)
-                                send_log(_,W4),
-
                                 need(Pheromone),
-                                writeln('Before Pheromones release..'),
+                                (
+                                        Pheromone =< 0 -> 
 
-                                pheromone_now(Pnow),
-                                pheromone_timeout(PTO),
-                                
-                                pheromone_time(Ptime),
+                                                        (Pheromone =:= -2 -> 
+                                                                
+                                                                intranode_queue(Ilog),
+                                                                length(Ilog,Lenlog),
+                                                                Str1 = N, Str2 = ' ', Str3 = '0', Str4 = ' ', Str5 = Lenlog, 
+                                                                writeln('Sending log 0'),
+                                                                atom_concat(Str1, Str2, W1), 
+                                                                atom_concat(W1, Str3, W2),
+                                                                atom_concat(W2, Str4, W3),
+                                                                atom_concat(W3, Str5, W4),
+                                                                send_log(_,W4)
+                                                        
+                                                                ;
+                                                                nothing
+                                                        )
 
-                                Newptime = Ptime + 1,
+                                                        ;
 
-                                retractall(pheromone_time(_)),
-                                assert(pheromone_time(Newptime)),
+                                                        intranode_queue(Ilog),
+                                                        length(Ilog,Lenlog),
+                                                        platform_port(Port),
+                                                        writeln('Need of Platform NOT satisfied at time point ':N),
+                                                        writeln('Releasing Pheromones started at ':Port),
 
-                                pheromone_time(PT),
+                                                        node_neighbours(NN),
+                            
+                                                        pheromone_now(Pnow),
+                                                        pheromone_timeout(PTO),
+                                                        
+                                                        pheromone_time(Ptime),
 
-                                ((((PT mod PTO) =:= 0), Pnow \== 'None')-> writeln('Inside Timeout 1..'),all_nodes(ANN),tell_all_other_nodes(ANN, Pnow);nothing),
+                                                        Newptime is Ptime + 1,
 
-                                % If need not equal 0, var is first time occurance of need we will release pheromones.. 
-                                ((Pnow = 'None' ; ((PT mod PTO) =:= 0))-> writeln('Inside Timeout 2..'),release_pheromones(Pheromone, N) ; nothing)
+                                                        retractall(pheromone_time(_)),
+                                                        assert(pheromone_time(Newptime)),
+
+                                                        pheromone_time(PT),
+
+                                                        ((((PT mod PTO) =:= 0), Pnow \== 'None')-> writeln('Inside Timeout 1..'),all_nodes(ANN),tell_all_other_nodes(ANN, Pnow);nothing),
+
+                                                        % If need not equal 0, var is first time occurance of need we will release pheromones.. 
+                                                        ((Pnow = 'None' ; ((PT mod PTO) =:= 0))-> release_pheromones_to_nodes_init(NN, Pheromone, N), writeln('releasing init complete') ; nothing),
+                                                        
+
+                                                        Str1 = N, Str2 = ' ', Str3 = '0', Str4 = ' ', Str5 = Lenlog, 
+
+                                                        atom_concat(Str1, Str2, W1), 
+                                                        atom_concat(W1, Str3, W2),
+                                                        atom_concat(W2, Str4, W3),
+                                                        atom_concat(W3, Str5, W4),
+                                                        
+                                                        %write(Stream, W4), nl(Stream)
+                                                        send_log(_,W4)
+                                )
                         )
         ),
 
-        % Decrement life of pheromones & Forward others pheromones
-
-        agent_list_new(ToDecrement),
-        decrement_lifetime_pheromones(ToDecrement),
-
-        agent_list_new(ToDiff),
-        diffuse_others_pheromones(ToDiff),
+        %writeln('Before decrementing pheromone life..'),
+        decrement_lifetime_pheromones,
+        pheromones_transfer,
+    
         % find out neighbour, eliminate neighbours[] used in the code.. It will also contain pher/con move, 
         % this predicate lies inside release_agent
 
+        %writeln('Before releasing agent..00'),
         release_agent,
 
         mutex_unlock(GPOSTT),
@@ -1690,6 +1716,6 @@ timer_release(ID, N):-
         sleep(5),
 
         N1 is N + 1,
-        timer_release(ID, N1),
+        timer_release(ID, N1, ReqGenerated),
         
         !.
