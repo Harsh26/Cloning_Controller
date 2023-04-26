@@ -4,7 +4,7 @@ import os
 os.system('start cmd /k "swipl -s log.pl -g set_log"')
 
 # Define the prefix for the Prolog file names
-prefix = 'myclone20_'
+prefix = 'myclone50_'
 
 # Get the list of Prolog files in the current working directory
 prolog_files = [f for f in os.listdir() if f.startswith(prefix)]

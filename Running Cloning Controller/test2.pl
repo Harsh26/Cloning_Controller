@@ -1,16 +1,25 @@
-:-dynamic agent_task/3, agent_task2/3.
 
-node1:-
-    consult('platform.pl'), 
-    start_tartarus(localhost, 50000,1111), 
-    create_mobile_agent(testagent,(localhost,50000),agent_task,[1111]),
-    set_log_server(localhost, 6666),
-    send_log(testagent, 'Hello log server from agent 1..'),
-    create_mobile_agent(testagent2,(localhost,50000),agent_task2,[1111]),
-    send_log(testagent2, 'Hello log server from agent 2..').
+:-dynamic intranode_queue/1.
+intranode_queue([]).
 
-agent_task(guid,(_,_),main):-
-    writeln('hi').
+enqueue(E, [], [E]).
 
-agent_task2(guid,(_,_),main):-
-    writeln('bye').
+enqueue(E, [H | T], [H | Tnew]) :-enqueue(E, T, Tnew).
+
+
+start:-
+    X = 'agent1',
+    Y = 15000,
+
+    intranode_queue(I),
+
+    enqueue(X, I, In),
+
+    retractall(intranode_queue(_)),
+    assert(intranode_queue(In)),
+
+    intranode_queue(Inn),
+
+    enqueue(Y, Inn, Innn),
+
+    writeln(Innn).

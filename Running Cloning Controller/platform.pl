@@ -663,8 +663,8 @@ clauses(Head,List):-
 
 %----------------------------------------------------------------------------
 
-member(H,[H|_]).
-member(H,[_|T]):- member(H,T).
+%member(H,[H|_]).
+%member(H,[_|T]):- member(H,T).
 
 %-------------------------------------------
 
@@ -1720,9 +1720,12 @@ handler(platform,(Ip,Port),send_ackm(GUID,_X)):-
         %writeln('--------positive ack processed---------'),
         ttyflush,
         !).
-        
+                
 
-handler(platform,(_Ip,_Port),send_ackm(_GUID,_X)):- print_message(error,'handler(platform,(Ip,Port),send_ackm(GUID,_X)) failed'),!.
+handler(platform,(_Ip,_Port),send_ackm(_GUID,_X)):- 
+        %writeln('Agent migrated, it seems..'),
+        print_message(error,'handler(platform,(Ip,Port),send_ackm(GUID,_X)) failed'),
+        !.
 
 %------------------------------------------------------------------------------
 
@@ -1807,7 +1810,7 @@ handler( platform, (Ip_sender,Port_sender), send(GUID,Handler,PayloadList,[Code|
         assert(agent_GUID(GUID,Handler,(Platform_Ip,Platform_Port))),
         get_time(Time),
         agent_post(platform,(Ip_sender,Port_sender),[handler,platform,(Ip_sender,Port_sender),send_ackm(GUID,Time)]),
-        agent_execute(GUID,(Platform_Ip, Platform_Port),Handler),
+        %agent_execute(GUID,(Platform_Ip, Platform_Port),Handler),
         %nl,write('Agent has been created at this port : '),
         %write(Port2),nl,
         %nl,
