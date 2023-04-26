@@ -1,0 +1,13 @@
+\chapter{Implementation} \label{Implementation}
+
+\large
+To test the working of TarPy, we worked on some algorithms, namely Distributed MST Algorithm, Maekawa Algorithm. We went on to implement Algorithms with increasing complexity. At first, we traversed a single agent from one node to another in a sequential manner.\par
+
+\bigbreak
+For implementing any algorithm, we first need to start the Tartarus platform in every system; only after this, the agents will move in the network. After starting the Tartarus platform, the agent can be executed, now depending on the problem or the algorithm we want to implement, the logic of the handler changes.\par
+
+\bigbreak
+For the traversal, we just maintain a variable that points to the next pointer, and whenever the agent reaches a system or a node, it increments its counter and moves to that system. and when the value becomes greater than the available port no. of the system in the network, the agent stops. Code and the demo can be found at \cite{3node}.
+
+\bigbreak 
+For the Distributed MST algorithm, the agent needs a lot more than just a variable. An agent needs to know what all nodes are already visited and need to maintain a priority queue, telling which node to visit next. The priority is decided according to the weights. When the agent starts from source, it checks all its neighbor and visits the node with minimum weight, now reaching to the destination agent checks what all the neighbor the current system has, the agent push this distances in the priority queue and then moves to the next node. When all the nodes are visited, the agent stops traversing, and like this, we get the minimum spanning tree. In this, the agent follows the Prim's algorithm's logic to calculate the MST in a distributed manner. The code and demo can be found at \cite{distmst}\par

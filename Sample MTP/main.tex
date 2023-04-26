@@ -1,0 +1,375 @@
+\documentclass[12t]{csethesis}
+%\usepackage{amsmath}
+\usepackage[left=3cm,right=3cm,top=3cm,bottom=3cm,includeheadfoot,a4paper]{geometry}
+\usepackage{pbox}
+\usepackage{amsmath}%
+%\usepackage{mathtools}
+%\usepackage{datetime}
+\usepackage{amsfonts}%
+\usepackage{amssymb}%
+\usepackage{graphicx}
+%\usepackage[boxruled,vlined]{algorithm2e}
+%\usepackage{color}
+\usepackage{enumerate}
+\usepackage{epstopdf}
+\usepackage[table]{xcolor}        % Extra math definitions
+\usepackage{graphics}       % PostScript figures
+\usepackage{setspace}       % 1.5 spacing
+\usepackage{multicol}
+\usepackage{epsfig,color}
+\usepackage{epstopdf}
+\usepackage{graphicx}
+\usepackage{lscape}
+%\usepackage{epsfig}
+\usepackage{enumerate}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+% \usepackage{fixltx2e}
+\usepackage{tikz}
+\usepackage{booktabs}
+%\usepackage[ruled,vlined]{algorithm2e}
+\usepackage{rotating}
+\usepackage{graphicx}
+\usepackage{stmaryrd}
+%\usepackage{caption}
+%\usepackage{subcaption}
+\usepackage{colortbl}
+\usepackage{subfigure}
+\usepackage{wrapfig}
+\usepackage{multirow}
+% \usepackage{fixltx2e}
+\usepackage[printonlyused]{acronym}
+%\documentclass{article}
+\usepackage{ifthen}
+\usepackage{placeins}
+\usepackage{epsfig,graphicx,color,amssymb,amsmath,comment}
+\usepackage{amsfonts}
+\usepackage[]{graphicx}
+\usepackage{array}
+\usepackage{commath}
+\usepackage{cite} 
+%\usepackage[]{graphicx}
+\usepackage{adjustbox}
+\usepackage{longtable,lscape}
+\usepackage{url}
+\usepackage{subfigure}
+\usepackage{mathtools}
+% For appendix lstlisitings
+%\usepackage[T1]{fontenc}
+%\usepackage{textcomp}
+\usepackage{listings}
+%\lstset{upquote=true}
+\usepackage{appendix}
+%\usepackage{hyperref}
+
+\usetikzlibrary{shapes,shadows,arrows}
+\tikzstyle{startstop} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=red!30]
+\tikzstyle{io} = [trapezium, trapezium left angle=70, trapezium right angle=110, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=blue!30]
+\tikzstyle{process} = [rectangle, minimum width=3cm, minimum height=1cm, text centered, text width=3cm, draw=black, fill=orange!30]
+\tikzstyle{decision} = [diamond, minimum width=3cm, minimum height=1cm, text width=3cm,text centered, draw=black, fill=green!30]
+\tikzstyle{arrow} = [thick,->,>=stealth]
+
+\usepackage{epsfig}
+\phdtitle = {\textsl{TarPy: A Multi Agent Platform in Python}} 
+\name = {Ajitem Joshi And Shubham Sharma}
+\rollno = {194101021 and 194101047}
+\guide = {Prof. Shivashankar B. Nair}
+
+
+\begin{document}
+\include{title}
+%\cleardoublepage
+
+\include{chapters/certificate}
+%\cleardoublepage
+\include{chapters/Acknowledgement}
+
+\pagenumbering{roman}
+
+\tableofcontents
+\clearpage
+\addcontentsline{toc}{chapter}{List of Figures}
+\listoffigures
+\clearpage
+
+%========== Chapters
+
+\typeout{}
+\clearpage
+\addcontentsline{toc}{chapter}{Abstract}
+\include{chapters/abstract}
+%\cleardoublepage
+\typeout{}
+
+\pagenumbering{arabic}
+\def\headrulehook{\color{black}}
+
+\include{chapters/introduction}
+\include{chapters/Related_work}
+\include{chapters/Description}
+%\include{chapters/experiment}
+\include{chapters/Implementation}
+\include{chapters/future_work}
+\include{chapters/conclusion}
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+%\end{singlespace}
+\clearpage
+
+\begin{appendices}
+\chapter{Code for 3 - Node Traversal} \label{traverse}
+\textbf{Code for handler.py}
+\begin{lstlisting}
+# import agent1_Database as db -> Added by default
+
+# Ensure that this function is same in call_handler.pl
+def next_node_port(Cur_Port):
+    #Extracting the Data
+    next_node = db.Queue
+    visited = db.Visited
+    Source = db.Source
+    Base = db.Base
+    
+    # Updating the Data
+    # Add current node to visited
+    visited.append(next_node)
+
+    # Increment next_node by 1
+    next_node = next_node + 1
+    
+    #Writing the data in the database file.-
+    # Open Database file in write mode
+    with open("agent1_Database.py",``w") as f:
+        # Writing data to a file 
+        f.write( "\\nBase = " + repr(Base) + "\\n")
+        f.write( "\\nSource = " + repr(Source) + "\\n")
+        f.write( "\\nQueue = " + repr(next_node) + "\\n")
+        f.write( "\\nVisited = " + repr(visited) + "\\n")
+
+    #Returning the Port
+    if next_node == 4:
+        return 0
+    return Base + next_node
+
+\end{lstlisting}
+\clearpage
+\textbf{Code for node1.py}
+\begin{lstlisting}
+import Tartarus as tar
+
+Base = 50000
+IP = "localhost"
+Port = 50001
+Agent = "agent1"
+node = Port - Base
+handler_file = "handler.py"
+data_filename = "Database.py"
+
+#Include platform and start tartarus
+tar.include("platform_ubuntu.pl")
+tar.start_tartarus(IP, Port, 2529)
+
+while True:
+    s = input("press halt to close\n")
+    if s == 'halt':
+        tar.close_tartarus()
+        break
+
+    if s == 'start':
+        # Agent 1 has to get the next Node port to visit
+        next_node = 1
+        visited = []
+
+        # Open Database file in write mode
+        # Write Info required as payload(dynamic)
+        with open(data_filename, "w") as f:
+            # Writing data to a file 
+            f.write("\nBase = " + repr(Base) + "\n")
+            f.write("\nSource = " + repr(node) + "\n")
+            f.write("\nQueue = " + repr(next_node) + "\n")
+            f.write("\nVisited = " + repr(visited) + "\n")
+        
+        # Create mobile agent
+        tar.create_mobile_agent(Agent, IP, Port, [2529])
+
+        # Add Handlers as strings
+        tar.add_handler(Agent, handler_file, data_filename)
+
+        # Execute the agent
+        tar.agent_execute(Agent, IP, Port)
+
+\end{lstlisting}
+\clearpage
+\textbf{Code for nodeX.py where X = [2,3]}
+\begin{lstlisting}
+
+import Tartarus as tar
+
+Base = 50000
+IP = "localhost"
+# Change Port to Base + X.
+# For node2, Port is defined below
+Port = 50002
+current_node = Port - Base
+
+tar.include("platform_ubuntu.pl")
+tar.start_tartarus(IP, Port, 2529)
+
+while True:
+    s = input("press halt to close\n")
+    if s == 'halt':
+        tar.close_tartarus()
+        break
+
+\end{lstlisting}
+\chapter{Code for Distributed MST} \label{dmst}
+\textbf{Code for handler.py}
+\begin{lstlisting}
+import Tartarus as tar
+import Database as db
+
+#functions 
+def compare(tup):
+    return tup[1]
+
+def next_node_port(Cur_Port):
+
+    #Extracting the Data
+    graph = db.Graph
+    q = db.Queue
+    visited = db.Visited
+    Source = db.Source
+    Base = db.Base
+    mst = db.mst
+    cost =db.cost
+    
+    # Updating the Data
+    flag = False
+    visited.add(Source)
+    for tup in graph[Source]:
+            if tup[0] not in visited:
+                q.append((tup[0],tup[1],Source))
+        
+    q.sort(key = compare)
+    while len(q) > 0:
+        tmp = q.pop(0)
+        if tmp[0] not in visited:
+            flag = True
+            mst.append((tmp[0],tmp[2]))
+            cost += tmp[1]
+            Source = tmp[0]
+            break
+
+    #Writing the data in the database file
+    
+    f = open( "Database.py", "w" ) 
+    f.write( "\\nBase = " + repr(Base) + "\\n") 
+    f.write( "\\nSource = " + repr(Source) + "\\n")
+    f.write( "\\nGraph = " + repr(graph) + "\\n")
+    f.write( "\\nQueue = " + repr(q) + "\\n")
+    f.write( "\\nVisited = " + repr(visited) + "\\n")
+    f.write( "\\nmst = " + repr(mst) + "\\n")
+    f.write( "\\ncost = " + repr(cost) + "\\n")
+    f.close()
+       
+    #Returning the Port
+    if flag:
+        return Base + Source  
+    return 0 
+
+\end{lstlisting}
+\clearpage
+\textbf{Code for nodeX.py where X = [1, 7]}
+\begin{lstlisting}
+import Tartarus as tar
+import Database as db
+
+def compare(tup):
+    return tup[1]
+
+# all basic varibles for intitating Tartarus
+Base = 50000
+IP = "localhost"
+
+# Change Port to Base + X.
+# For node1, Port is defined below
+Port = 50001
+
+
+# Starting the Tartarus Platform
+tar.start_tartarus(IP,Port,1)
+
+while True:
+    str = input("press halt to close\n")
+    
+    # On halt platform gets closed.
+    if str == 'halt'
+        tar.close_tartarus()
+        break
+
+    # On "start" agents finds MST
+    if str == 'start':
+        Source = Port - Base
+        # Complete graph known
+        graph = 
+        {
+            1: [(2,2), (3,3)],
+            2: [(1,2), (3,1), (4,1), (5,4)],
+            3: [(1,3), (2,1), (6,5)],
+            4: [(2,1), (5,1)],
+            5: [(2,4), (4,1), (6,1)],
+            6: [(3,5), (5,1), (7,1)],
+            7: [(6,1)]
+        }
+        q = []
+        visited = set()
+        visited.add(Source)
+        mst = []
+        cost = 0 
+        for tup in graph[Source]:
+            if tup[0] not in visited:
+                q.append((tup[0],tup[1],Source))
+        
+        # List is taken up as it tells which will be the min
+        # cost tells the current overall cost of the mst
+        
+        q.sort(key = compare)
+        while True:
+            tmp = q.pop(0)
+            if tmp[0] not in visited:
+                mst.append((tmp[0],tmp[2]))
+                cost += tmp[1]
+                Source = tmp[0]
+                break
+        
+        print("Queue is: ",q, 
+        "\nVisited list: ", visited,
+        "\nSource: ", Source)
+        
+        Agent = "groot"
+        handler_file = "handler.py"
+        Data_file = "Database.py"
+
+        #Useful data in Database
+        f = open( "Database.py", "w" )    
+        f.write( "\nBase = " + repr(Base) + "\n")  
+        f.write( "\nSource = " + repr(Source) + "\n")
+        f.write( "\nGraph = " + repr(graph) + "\n")
+        f.write( "\nQueue = " + repr(q) + "\n")
+        f.write( "\nVisited = " + repr(visited) + "\n")
+        f.write( "\nmst = " + repr(mst) + "\n")
+        f.write( "\ncost = " + repr(cost) + "\n")
+        f.close()
+
+        #Agent movement
+        tar.create_mobile_agent(Agent,IP,Port,[1])
+        
+        tar.add_handler(Agent, handler_file, Data_file)
+        
+        tar.move_agent(Agent,IP,Base+Source)
+
+\end{lstlisting}
+\clearpage
+\end{appendices}
+\end{document}
