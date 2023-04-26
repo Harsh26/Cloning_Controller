@@ -35,7 +35,6 @@ attachneighbour:-
 startcontroller:-
    consult("cloningControllerOnePort.pl"),
    platform_port(P),
-   start_clonning_controller(15002),
    create_mobile_agent(agent2,(localhost,15002),handler1,[30,32]),
    retractall(agent_resource(_,_)), assert(agent_resource(guid,20)), retractall(agent_lifetime(_,_)), assert(agent_lifetime(guid, 5)), retractall(my_service_reward(_,_)), assert(my_service_reward(guid, 0)),
    retractall(agent_type(_,_)), assert(agent_type(guid, 2)), retractall(agent_inherit(_,_)), assert(agent_inherit(guid, 'P')),

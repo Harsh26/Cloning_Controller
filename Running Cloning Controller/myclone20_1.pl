@@ -18,7 +18,7 @@ starttar:-
     consult("platform.pl"), 
     start_tartarus(localhost,15001,30),
     retractall(need_train(_)),
-    assert(need_train([5])),
+    assert(need_train([1])),
     assert(all_nodes([15000,15001,15002,15003,15004,15005,15006,15007,15008,15009,15010,15011,15012,15013,15014,15015,15016,15017,15018,15019])),
     retractall(platform_number(_)),
     assert(platform_number(1)).
@@ -28,7 +28,6 @@ attachneighbour:-
 
 startcontroller:-
     consult("cloningControllerOnePort.pl"),
-    start_clonning_controller(15001),
 
     init_need(0),
     assert(satisfied_need(0)),

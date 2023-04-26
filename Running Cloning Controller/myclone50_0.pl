@@ -39,7 +39,8 @@ startcontroller:-
    retractall(agent_visit(_,_)), assert(agent_visit(guid, [PP])),
    add_payload(agent1,[(agent_resource,2), (agent_lifetime, 2), (my_service_reward, 2), (agent_type,2), (agent_inherit,2), (agent_visit, 2)]),
    platform_port(15000),
-   init_need(0),
+   
+   init_need(0),                   
    assert(satisfied_need(0)),
    assert(pheromone_now('None')),
    assert(pheromone_time(1)),

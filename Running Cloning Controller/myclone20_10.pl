@@ -31,7 +31,6 @@ attachneighbour:-
 
 startcontroller:-
     consult("cloningControllerOnePort.pl"),
-    start_clonning_controller(15010),
     init_need(-1),
     assert(satisfied_need(-1)),
     assert(pheromone_now('None')),
