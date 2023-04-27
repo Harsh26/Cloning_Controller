@@ -764,22 +764,22 @@ leave_queue(Agent,NIP,NPort):-
 leave_queue(Agent,IP,Port):- writeln('leave_queue Failed'),!.
 
 
-:-dynamic pher/1.
-pher(NP):-
+:-dynamic pher/2.
+pher(H, NP):-
         find_highest_concentration_pheromone(H, PherName, NxtNode), writeln('Nxt Node ':NxtNode),
         NP = NxtNode,
         !.
-pher(_):-
+pher(_, _):-
         writeln('Pher predicate failed !!'),
         !.
 
 
 :-dynamic cons/1.
-cons(NP):-
+cons(H, NP):-
         nn_minus_vis(H, Nxtnode), writeln('Nxt node ':Nxtnode),
         NP = Nxtnode,
         !.
-cons(_):-
+cons(_, _):-
         writeln('Cons predicate failed !!'),
         !.
 
@@ -873,9 +873,9 @@ phercon_neighbour(NP):-
 
         (        
                 Decider = 'P'->
-                        pher(NP)
+                        pher(H, NP)
                         ;
-                        cons(NP)
+                        cons(H, NP)
         ),
 
         !.
@@ -1608,7 +1608,7 @@ timer_release(ID, N):-
                         ;
                         (
                                 (
-                                        (N =:= 10)->
+                                        (N =:= 300)->
                                                 (
                                                         halt
                                                 )
