@@ -774,7 +774,7 @@ pher(_, _):-
         !.
 
 
-:-dynamic cons/1.
+:-dynamic cons/2.
 cons(H, NP):-
         nn_minus_vis(H, Nxtnode), writeln('Nxt node ':Nxtnode),
         NP = Nxtnode,
