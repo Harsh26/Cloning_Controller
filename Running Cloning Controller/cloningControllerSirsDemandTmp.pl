@@ -88,6 +88,7 @@ type_of_agents(3).
 
 :-dynamic bufferin/1.
 
+
 %---------------------Declarations End----------------------------------------%
 
 
@@ -122,12 +123,14 @@ init_need(N):-
 
 q_manager(P):-
               write('=====Q-Manager====='),
-              write('started at port': P),!.
+              write('started at port': P),
+              %create_mobile_agent(enqueue_manager, (localhost,P), q_manager_handle, [30,32]),
+              !.
 
 q_manager(P):- write('q_manager failed'),!.
 
 
-:- dynamic q_manager_handle_thread/3.
+:- dynamic q_manager_handle_thread/4.
 
 q_manager_handle_thread(ID,(IP,NP),X, Tokens):-
                 
@@ -141,12 +144,13 @@ q_manager_handle_thread(ID,(IP,NP),X, Tokens):-
                 
                 intranode_queue(Li), 
                 length(Li,Q_Len),
-                
-                queue_threshold(Len),
 
                 findall(_, bufferin(_), Buffer),
                 length(Buffer, B_Len),
+
                 writeln('Bufferin Len':B_Len),
+
+                queue_threshold(Len),
                 
                 ack_q(ACK_Q),
                 length(ACK_Q,ACK_Len),
@@ -173,50 +177,43 @@ q_manager_handle_thread(ID,(IP,NP),X, Tokens):-
                         )
                 ),
 
+                (q_manager_handle_thread_id(ID) -> retract(q_manager_handle_thread_id(ID)), writeln('q_manager_handle_thread finished'); nothing),
+                
+                
                 mutex_unlock(GPOST),
                 !.
 
 q_manager_handle_thread(ID,(IP,NP),X, _):-
                 writeln('Q_maanger_handle_thread failed !!'), !.
 
-:- dynamic q_manager_handle_thread_id/1.
-:-dynamic call_count/1.
-call_count(0).
-
 :- dynamic q_manager_handle/3.
+:- dynamic q_manager_handle_thread_id/1.
+
 
 q_manager_handle(_,(IP,NP),recv_agent(X, Token)):-
 
-                call_count(Cnt),
-
-                (Cnt =:= 0 -> 
+                writeln('Arrived q_manager_handle atleast'),
+                
+                % Check if there is already a thread running
+                (q_manager_handle_thread_id(ThreadID)->
                         (
-                                writeln('Atleast till q_manager_handle'),
-                                retractall(call_count(_)),
-                                assert(call_count(1)),
-                                thread_create(q_manager_handle_thread(ID, (IP, NP), X, Token),ID,[detached(false)]),
-                                assert(q_manager_handle_thread_id(ID))
+                                % If a thread is already running, send a message to the thread to add the agent to the buffer
+                                writeln('A q_manager_handle_thread is already running.'),
+                                writeln('Sending request to add agent to buffer.'),
+                                thread_send_message(ThreadID, q_manager_handle_thread(ThreadID, (IP, NP), X, Token))
                         )
                         ;
                         (
-                                writeln('Atleast till q_manager_handle'),
-                                
-                                q_manager_handle_thread_id(ThreadID),
-
-                                thread_property(ThreadID, status(Status)),
-                                (
-                                        Status == running -> 
-                                                writeln('Using older thread...'),
-                                                q_manager_handle_thread_id(OldID),
-                                                thread_send_message(OldID, q_manager_handle_thread(OldID, (IP, NP), X, Token)) 
-                                                ;
-                                                retract(q_manager_handle_thread_id(ThreadID)),
-                                                thread_create(q_manager_handle_thread(NewID, (IP, NP), X, Token),NewID,[detached(false)]),
-                                                assert(q_manager_handle_thread_id(NewID))
-                                )
+                                % If no thread is running, create a new thread to handle the request
+                                writeln('Creating new q_manager_handle_thread.'),
+                                thread_create(q_manager_handle_thread(ID, (IP, NP), X, Token),ID,[detached(false)]),
+                
+                                % Remember the ID of the thread
+                                assert(q_manager_handle_thread_id(ID))
                         )
                 ),
 
+                
                 !.
                 
 q_manager_handle(guid,(IP,P),recv_agent(X, _)):- write('Q-manager handler failed!!'),!.
@@ -268,6 +265,8 @@ update_intranode_queue(Inew):-
                         !.
 update_intranode_queue(Inew):- write('update_intranode_queue Failed'),!.
 
+
+
 % update_ack_queue/1 updates the ack_queue with the new list
 :- dynamic update_ack_queue/1.
 update_ack_queue(X):-
@@ -277,29 +276,6 @@ update_ack_queue(X):-
 
 update_ack_queue(X):- write('update_ack_queue Failed'),!.
 
-
-:- dynamic initiate_migration/1.
-initiate_migration(GUID, NP):-
-                
-                agent_list_new(Aglist),
-                (member(GUID, Aglist)->
-                
-                        writeln('\n'),
-                        write('Leaving Queue':GUID),
-                        writeln(' To ':NP),
-
-                        platform_port(Q),
-                
-                        intranode_queue(I),
-                        writeln('Initiate_migration Successful!!!, updated intranode queue:':I)
-
-                        ;
-                        nothing
-                ),
-        
-        !.
-
-initiate_migration(GUID):- writeln('initiate_migration Failed'),!.
 
 % Assigns the clone same type as that of parent.
 :-dynamic assign_type/2.
@@ -519,15 +495,11 @@ movedagent(_,(IP,NP), X):-
 
         writeln('This executed..'),
         assert(bufferin(X)),
-        %intranode_queue(I),
         writeln('This also executed..'),
-        
-        %enqueue(X,I,Inew),
         
 
         writeln('This did execute'),
-        %update_intranode_queue(Inew),
-        %writeln('Agent added to the queue':Inew),
+        writeln('Agent added to the buffer queue'),
 
         !.
                 
@@ -677,8 +649,6 @@ dq_manager_thread_ack(ID, (IP, P), X):-
                         nothing
                 ),
 
-                
-        
                 mutex_unlock(GPOSTT),
                 !.
 
@@ -734,6 +704,34 @@ dq_manager_handle(_,(IP,P),nack(X)):-
 
 dq_manager_handle(_,(IP,P),nack(X)):- writeln('dq_manager_handle NAK Failed'),!.
 
+% If the received response from the destination is an NAK.
+dq_manager_handle(_,(IP,P),nack(X)):-
+
+                writeln('Arrived dq_manager_handle_nak atleast'),
+                %thread_create(dq_manager_thread_nak(ID, (IP, P), X),ID,[detached(false)]),
+                %dq_manager_thread_nak(_, (IP, P), X),
+
+                intranode_queue(I),
+                length(I, Len),
+
+                (Len > 0 -> 
+
+                        intranode_queue([H|T]), agent_list_new(Aglist),
+                        ((member(X, Aglist), H = X)->
+                                writeln('Migration Denied (NAK) by the receiver'),
+                                migrate_typhlet(X)
+                                ;
+                                nothing
+                        )
+
+                        ;
+                        nothing                
+                ),
+                
+                !.
+
+dq_manager_handle(_,(IP,P),nack(X)):- writeln('dq_manager_handle NAK Failed'),!.
+
 
 
 :-dynamic dq_manager_handler/3.
@@ -777,6 +775,7 @@ dq_manager_handler(_,(IP,NP),Agent):-
 
 dq_manager_handler(_,(IP,NP),Agent):-
         writeln('Dq_manager_handler failed !!'), !.
+
 
 %leave_queue/3 contacts the destination of the agent whether it can move there or not.
 
@@ -930,7 +929,6 @@ release_agent:-
                         mutex_lock(GMID),
                                                 
                         writeln('Release Agent called...'),
-                        need(N),
                         node_neighbours(X),
                         length(X, L),
 
@@ -1631,11 +1629,63 @@ pair_to_atom(Key-Value, Atom) :-
     atomic_list_concat([Key, Value], '-', Atom).
 
 
-:-dynamic take_in_buffer/0.
+:-dynamic clear_my_buffer/1.
 
-take_in_buffer:-
-        posted_lock(GPOST),
-        mutex_lock(GPOST),
+clear_my_buffer([]).
+clear_my_buffer([Agent, NP|T]):-
+        
+        global_mutex(GMID),
+        mutex_lock(GMID),
+
+        agent_list_new(Aglist),
+        (member(Agent, Aglist)->
+        
+                writeln('Removing agent from the Queue':Agent),
+
+                intranode_queue(Ihere),
+                writeln('Agents currently in queue ':Ihere),
+
+                agent_list_new(Tochk),
+                writeln('Agents in Aglist ':Tochk),
+
+                platform_port(PP),
+                
+                my_service_reward(Agent, S),
+                Snew is S+1,
+                writeln('New Reward is ':Snew),
+                give_reward(Agent, Snew),
+                
+                agent_visit(Agent, Vis),
+                enqueue(PP, Vis, Visnew),
+
+                retractall(agent_visit(Agent, _)), assert(agent_visit(Agent, Visnew)),
+
+                writeln('To move to ':NP),
+                move_agent(Agent,(localhost,NP)),
+
+                dequeue(Agent,Ihere,In),
+
+                update_intranode_queue(In),
+                intranode_queue(Ifinal),
+                writeln('Agents now in queue ':Ifinal)
+                ;
+                nothing
+        ),
+
+        mutex_unlock(GMID),
+        
+        clear_my_buffer(T),
+        !.
+
+clear_my_buffer(_):-
+        writeln('Clear my buffer failed..'),
+        !.
+
+:-dynamic take_in_buffer/1.
+
+take_in_buffer(_):-
+        global_mutex(GMID),
+        mutex_lock(GMID),
 
         writeln('Take in buffer check 1..'),
 
@@ -1647,10 +1697,10 @@ take_in_buffer:-
 
         writeln('Take in buffer check 2..'),
 
-        mutex_unlock(GPOST),
+        mutex_unlock(GMID),
         !.
 
-take_in_buffer:-
+take_in_buffer(_):-
         writeln('Take in buffer failed !!'),
         !.
 
@@ -1674,6 +1724,7 @@ assertz_to_queue(_,_):-
         writeln('Assertz to queue failed !!'),
         !.
 
+    
 
 
 :-dynamic timer_release/2.
@@ -1690,7 +1741,7 @@ timer_release(ID, N):-
                         ;
                         (
                                 (
-                                        (N =:= 100)->
+                                        (N =:= 10)->
                                                 (
                                                         halt
                                                 )
@@ -1854,10 +1905,11 @@ timer_release(ID, N):-
         mutex_unlock(GPOSTT),
         sleep(5),
 
-        mutex_unlock(GPOST),
-        sleep(5),
+        take_in_buffer(_),
 
-        take_in_buffer,
+        mutex_unlock(GPOST),
+
+        sleep(4),
 
         N1 is N + 1,
         timer_release(ID, N1),
