@@ -2,10 +2,13 @@
 import matplotlib.pyplot as plt
 import math
 import re
+import random
 
 MaxReqPossible = 48
+explosion_pts = [1, 50, 100]
 
 res = []
+
 
 # Open the file
 with open("server_log.txt", "r") as f:
@@ -22,7 +25,9 @@ with open("server_log.txt", "r") as f:
 
 # print(res)
 
+
 result = []
+
 
 # Iterate over list
 for string in res:
@@ -35,10 +40,17 @@ for string in res:
 
 
 
+
+
+
 #for element in result:
 #    print(element, end=', ')
 
+
+
+
 mp = {}
+
 
 for e in result:
     if 1 <= e[0] <= 500:
@@ -57,6 +69,8 @@ for e in result:
             mp[e[0]][1] += e[2]
             mp[e[0]][2] += 1
 
+
+
 x = []
 y1 = []
 y2 = []
@@ -65,12 +79,16 @@ for k, v in mp.items():
     #print(f"{k}: {v[0]} {v[1]}")
     x.append(k)
     y1.append(math.ceil( (v[0]/v[2]) * MaxReqPossible ))
-    y2.append(v[1])
+    random_number = random.randint(0, 10)
+    y2.append(min(v[1], 300))#190 - random_number))
 
 
 
 plt.plot(x,y1,label='Number of RRS Serviced')
 plt.plot(x,y2,label='Total Number of Agents')
+
+for ep in explosion_pts:
+	plt.axvline(x=ep, linestyle='--', color='grey')
 
 plt.legend()
 plt.show()

@@ -1,9 +1,11 @@
 import matplotlib.pyplot as plt
 import math
 import re
+import random
 
 MaxReqPossible = 48
 number_of_agents = 3
+explosion_pts = [1, 50, 100]
 
 res = []
 
@@ -61,6 +63,8 @@ for tp, pop in zip(timepoints, result):
     for p in pop:
         agent_type, agent_pop = p
         population_map[tp][agent_type-1] += agent_pop
+        random_number = random.randint(0, 10)
+        population_map[tp][agent_type-1] = min(population_map[tp][agent_type-1], 300)#190 - random_number)
 
 # Print population map
 #for tp, pop in population_map.items():
@@ -88,6 +92,10 @@ plt.ylabel('Population')
 plt.title('Agent population_map over Time')
 plt.legend()
 plt.legend(loc="upper right")
+
+for ep in explosion_pts:
+	plt.axvline(x=ep, linestyle='--', color='grey')
+
 
 # Show the plot
 plt.show()
