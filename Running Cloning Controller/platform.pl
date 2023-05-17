@@ -473,6 +473,7 @@ agent_post(platform,(Ip_receiver,Port_receiver),FunctionList):-                 
 
 agent_post(_Platform,(_Ip_receiver,_Port_receiver),_FunctionList):-
         %print_message(error,'post_agent(platform,(Ip_receiver,Port_receiver),FunctionList) failed'),
+        %writeln('Port ':_Port_receiver),
         catch((throw('error(socket_error(Connection refused),_)')),C,(retractall(conn_refused_er(_)), assert(conn_refused_er(C)), error_cnt(E), retractall(error_cnt(_)), E1 is E + 1, assert(error_cnt(E1)))),		   %added by Menaxi J Bagchi
 		fail,!.  
 

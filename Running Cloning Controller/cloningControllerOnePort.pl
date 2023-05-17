@@ -42,7 +42,7 @@ clone_lifetime(10).
 clone_resource(10).
 
 :-dynamic queue_threshold/1.
-queue_threshold(3).
+queue_threshold(1).
 
 :-dynamic q_monitor_steptime/1.
 q_monitor_steptime(1003).
@@ -1717,7 +1717,7 @@ timer_release(ID, N):-
                         ;
                         (
                                 (
-                                        (N =:= 300)->
+                                        (N =:= 150)->
                                                 (
                                                         halt
                                                 )
@@ -1763,18 +1763,9 @@ timer_release(ID, N):-
                 
                 need_train(Need_Train),
                 
-                (N =< 150 ->  
-                			( (N >= 1, N =< 50) -> decide_H(1, H)
-                                                               %H = 1
-                                                                ; nothing),
-                			( (N >= 51, N =< 100) -> decide_H(2, H)
-                                                                %H = 2
-                                                                ; nothing),
-                			( (N >= 101, N =< 150) -> decide_H(3, H) 
-                                                                %H = 3 
-                                                                ; nothing)
                 
-                ; random_member(H, Need_Train)), % modify this later, just to check explosion of PerAgentPopulation
+                
+                random_member(H, Need_Train), % modify this later, just to check explosion of PerAgentPopulation
 
                 writeln('***************************************************************************'),
                 writeln('Platform NEEDS the service of Agent ':H),

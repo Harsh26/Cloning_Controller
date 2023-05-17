@@ -4,7 +4,7 @@ import os
 os.system('gnome-terminal --command="bash -c \'swipl -s log.pl -g set_log; exec bash\'"')
 
 # Define the prefix for the Prolog file names
-prefix = 'grid_myclone50_'
+prefix = 'mesh_myclone50_'
 
 # Get the list of Prolog files in the current working directory
 prolog_files = [f for f in os.listdir() if f.startswith(prefix)]

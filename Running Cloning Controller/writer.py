@@ -7,8 +7,8 @@ with open('input.txt', 'r') as f:
 
 # loop over 50 files and update node neighbor lists
 for i in range(50):
-    old_filename = f"line_myclone50_{i:02}.pl"
-    new_filename = f"grid_myclone50_{i:02}.pl"
+    old_filename = f"mesh_myclone50_{i:02}.pl"
+    new_filename = f"mesh_myclone50_{i:02}.pl"
     
     # read contents of old file and replace line using regex
     with open(old_filename, 'r') as f:
