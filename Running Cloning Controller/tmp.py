@@ -1,16 +1,12 @@
-import re
+import shutil
 
-# loop through all files
 for i in range(50):
-    file_name = f"myclone50_{i}.pl"
-    
-    # read contents of file
-    with open(file_name, 'r') as file:
-        file_contents = file.read()
-        
-    # use regex to replace init_need(0) with init_need(-1)
-    file_contents = re.sub(r"init_need\(-2\)", r"init_need(0)", file_contents)
-    
-    # write modified contents back to file
-    with open(file_name, 'w') as file:
-        file.write(file_contents)
+
+    if i < 10:
+        old_filename = f"line_myclone50_" + "0" + str(i) + ".pl"
+        new_filename = f"star_myclone50_" + "0" + str(i) + ".pl"
+        shutil.copy(old_filename, new_filename)
+    else:
+        old_filename = f"line_myclone50_{i}.pl"
+        new_filename = f"star_myclone50_{i}.pl"
+        shutil.copy(old_filename, new_filename)
