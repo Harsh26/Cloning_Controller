@@ -86,7 +86,6 @@ type_of_agents(3).
 :-dynamic platform_number/1.
 :-dynamic satisfied_need/1.
 
-:-dynamic bufferin/1.
 
 %---------------------Declarations End----------------------------------------%
 
@@ -104,7 +103,7 @@ start_clonning_controller(P):-
                 mutex_create(GPOSTT),
                 assert(posted_lock_dq(GPOSTT)),
 
-                set_log_server(localhost, 6666),
+                %set_log_server(localhost, 6666),
 
                 q_manager(P),
                 dq_manager(P),
@@ -143,17 +142,13 @@ q_manager_handle_thread(ID,(IP,NP),X, Tokens):-
                 length(Li,Q_Len),
                 
                 queue_threshold(Len),
-
-                findall(_, bufferin(_), Buffer),
-                length(Buffer, B_Len),
-                writeln('Bufferin Len':B_Len),
                 
                 ack_q(ACK_Q),
                 length(ACK_Q,ACK_Len),
                 
                 platform_port(QP),
                 
-                L is Q_Len + B_Len, 
+                L is Q_Len, 
                 writeln(Len), writeln(Q_Len), writeln(ACK_Len), writeln(L), platform_token(Ptoken),
                 (
                         (L<Len, member(Ptoken, Tokens))->
@@ -172,51 +167,20 @@ q_manager_handle_thread(ID,(IP,NP),X, Tokens):-
                                 writeln('No space is available in queue or Tokens do not match. NAK sent...')
                         )
                 ),
-
+                
                 mutex_unlock(GPOST),
                 !.
 
 q_manager_handle_thread(ID,(IP,NP),X, _):-
                 writeln('Q_maanger_handle_thread failed !!'), !.
 
-:- dynamic q_manager_handle_thread_id/1.
-:-dynamic call_count/1.
-call_count(0).
-
 :- dynamic q_manager_handle/3.
 
 q_manager_handle(_,(IP,NP),recv_agent(X, Token)):-
 
-                call_count(Cnt),
-
-                (Cnt =:= 0 -> 
-                        (
-                                writeln('Atleast till q_manager_handle'),
-                                retractall(call_count(_)),
-                                assert(call_count(1)),
-                                thread_create(q_manager_handle_thread(ID, (IP, NP), X, Token),ID,[detached(false)]),
-                                assert(q_manager_handle_thread_id(ID))
-                        )
-                        ;
-                        (
-                                writeln('Atleast till q_manager_handle'),
-                                
-                                q_manager_handle_thread_id(ThreadID),
-
-                                thread_property(ThreadID, status(Status)),
-                                (
-                                        Status == running -> 
-                                                writeln('Using older thread...'),
-                                                q_manager_handle_thread_id(OldID),
-                                                thread_send_message(OldID, q_manager_handle_thread(OldID, (IP, NP), X, Token)) 
-                                                ;
-                                                retract(q_manager_handle_thread_id(ThreadID)),
-                                                thread_create(q_manager_handle_thread(NewID, (IP, NP), X, Token),NewID,[detached(false)]),
-                                                assert(q_manager_handle_thread_id(NewID))
-                                )
-                        )
-                ),
-
+                writeln('Arrived q_manager_handle atleast'),
+                thread_create(q_manager_handle_thread(ID, (IP, NP), X, Token),ID,[detached(false)]),
+                
                 !.
                 
 q_manager_handle(guid,(IP,P),recv_agent(X, _)):- write('Q-manager handler failed!!'),!.
@@ -518,16 +482,15 @@ movedagent(_,(IP,NP), X):-
         platform_port(Thisport),
 
         writeln('This executed..'),
-        assert(bufferin(X)),
-        %intranode_queue(I),
+        intranode_queue(I),
         writeln('This also executed..'),
         
-        %enqueue(X,I,Inew),
+        enqueue(X,I,Inew),
         
 
         writeln('This did execute'),
-        %update_intranode_queue(Inew),
-        %writeln('Agent added to the queue':Inew),
+        update_intranode_queue(Inew),
+        writeln('Agent added to the queue':Inew),
 
         !.
                 
@@ -1215,36 +1178,22 @@ insert_pheromone(Pheromone, List, NewList) :-
 
         nth0(0, Pheromone, Name),
         nth0(1, Pheromone, Concentration),
-        nth0(2, Pheromone, Lifetime),
-        nth0(3, Pheromone, Port),
-        nth0(4, Pheromone, Vis),
-        nth0(5, Pheromone, X),
-        nth0(6, Pheromone, Y),
-
-        writeln('insp chk 1'),
 
     (member([Name, OldConcentration, _, _, _, _, _], List) ->
         % If the pheromone is already present, compare the concentrations
         (Concentration > OldConcentration ->
-        writeln('insp chk 2'),
         % If the new pheromone has higher concentration, remove the old one
         remove_element([Name, OldConcentration, _, _, _, _, _], List, TempList),
         % Insert the new pheromone into the list
         insert_pheromone(Pheromone, TempList, NewList)
         ;
-        writeln('insp chk 3'),
         % If the old pheromone has higher concentration, do not insert the new one
         NewList = List
         )
     ;
         % If the pheromone is not already present, insert it into the list
-        append(List, [[Name, Concentration, Lifetime, Port, Vis, X, Y]], NewList)
-    ),
-    !.
-
-insert_pheromone(_,_,_):-
-        writeln('insert_pheromone failed !!'),
-        !.
+        enqueue(Pheromone, List, NewList)
+    ).
 
 
 % Define a predicate to update the list
@@ -1260,13 +1209,7 @@ add_me_thread(_, X):-
     % update vis and then add in DB..
     update_list(X, NewX, PP),
 
-    writeln('Updated the pheromone..vis..'),
-
     insert_pheromone(NewX, DB, DBnew),
-
-    writeln('Updated the pheromone insert..'),
-    
-    writeln('DBnew ':DBnew),
 
     retractall(pheromones_db(_)),
     assert(pheromones_db(DBnew)),
@@ -1282,8 +1225,8 @@ add_me_thread(_, _):-
 :-dynamic add_me/2.
 add_me(_,add(X)):-
 
-    %thread_create(add_me_thread(_, X), _, [detached(false)]),
-    add_me_thread(_, X),
+    thread_create(add_me_thread(_, X), _, [detached(true)]),
+    %add_me_thread(_, X),
     writeln('Add me ended..'),
     !.
 
@@ -1381,8 +1324,8 @@ whisperer(_,deletepherom(PH)):-
         
         %writeln('Arrived whisperer atleast.. Recieved Whispering request from ':NP),
         writeln('Arrived whisperer atleast.. Pheromone, whose request to be deleted, is recieved ':PH),
-        %thread_create(whisperer_handle_thread(PH),_,[detached(false)]), 
-        whisperer_handle_thread(PH),
+        thread_create(whisperer_handle_thread(PH),_,[detached(false)]), 
+        %whisperer_handle_thread(PH),
         %whisperer_handle_thread(PH),
         !.
 
@@ -1651,59 +1594,6 @@ pair_to_atom(Key-Value, Atom) :-
     atomic_list_concat([Key, Value], '-', Atom).
 
 
-:-dynamic take_in_buffer/0.
-
-take_in_buffer:-
-        posted_lock(GPOST),
-        mutex_lock(GPOST),
-
-        writeln('Take in buffer check 1..'),
-
-        findall(X, bufferin(X), Values),
-
-        writeln('Values in buffer ':Values),
-
-        assertz_to_queue(Values),
-
-        writeln('Take in buffer check 2..'),
-
-        mutex_unlock(GPOST),
-        !.
-
-take_in_buffer:-
-        writeln('Take in buffer failed !!'),
-        !.
-
-
-assertz_to_queue([]).
-assertz_to_queue([X|Xs]) :-
-        agent_list_new(Aglist),
-        (member(X, Aglist)->
-                intranode_queue(I),
-                enqueue(X, I, In),
-                update_intranode_queue(In),
-                retract(bufferin(X))
-                ;
-                nothing
-        ),
-
-        assertz_to_queue(Xs),
-    !.
-
-assertz_to_queue(_,_):-
-        writeln('Assertz to queue failed !!'),
-        !.
-
-decide_H(Num, H):-
-	
-	platform_number(PNR),
-	
-	(Num =:= 1 -> ( PNR < 26 -> H = 1 ; H = 2);nothing),
-	
-	(Num =:= 2 -> ( PNR < 26 -> H = 2 ; H = 3);nothing),
-	
-	(Num =:= 3 -> ( PNR < 26 -> H = 3 ; H = 1);nothing).
-
 :-dynamic timer_release/2.
 
 timer_release(ID, N):-
@@ -1756,7 +1646,7 @@ timer_release(ID, N):-
         satisfied_need(SN), 
         
         need(TmpNeed), % remove later
-        ((N =< 150, TmpNeed \== -1) -> retractall(need(_)), assert(need(0)) ; nothing), % remove later, just to check explosion of PerAgentPopulation
+        ((N = 125, TmpNeed \== -1) -> retractall(need(_)), assert(need(0)) ; nothing), % remove later, just to check explosion of PerAgentPopulation
         
         need(Need),
 
@@ -1764,17 +1654,8 @@ timer_release(ID, N):-
                 
                 need_train(Need_Train),
                 
-                (N =< 150 ->  
-                			( (N >= 1, N =< 50) -> %decide_H(1, H)
-                                                                H = 1
-                                                                ; nothing),
-                			( (N >= 51, N =< 100) -> %decide_H(2, H)
-                                                                H = 2
-                                                                ; nothing),
-                			( (N >= 101, N =< 150) -> %decide_H(3, H) 
-                                                                H = 3 
-                                                                ; nothing)
-                
+                (N = 125 ->  
+                                H = 3			
                 ; random_member(H, Need_Train)), % modify this later, just to check explosion of PerAgentPopulation
 
                 writeln('***************************************************************************'),
@@ -1817,16 +1698,24 @@ timer_release(ID, N):-
                                 atomic_list_concat(Atoms, ' ', AtomicList),
                                 writeln('AtomicList ':AtomicList),
 
+                                open('data.txt',append,X),
+
+                                Str0 = Port, Str00 = '--->', 
+
                                 Str1 = N, Str2 = ' ', Str3 = '1', Str4 = ' ', Str5 = Lenlog, Str6 = ' ', Str7 = AtomicList,
 
-                                atom_concat(Str1, Str2, W1), 
+                                atom_concat(Str0, Str00, W0),
+                                atom_concat(W0, Str1, W00),
+                                atom_concat(W00, Str2, W1), 
                                 atom_concat(W1, Str3, W2),
                                 atom_concat(W2, Str4, W3),
                                 atom_concat(W3, Str5, W4),
                                 atom_concat(W4, Str6, W5),
                                 atom_concat(W5, Str7, W6),
                                 
-                                send_log(_, W6)
+                                write(X, W6),
+                                write(X, '\n'),
+                                close(X)
                         )
                         ;
                         (
@@ -1868,16 +1757,25 @@ timer_release(ID, N):-
                                                         atomic_list_concat(Atoms, ' ', AtomicList),
                                                         writeln('AtomicList ':AtomicList),
 
+                                                        open('data.txt',append,X),
+
+                                                        
+                                                        Str0 = Port, Str00 = '--->', 
+
                                                         Str1 = N, Str2 = ' ', Str3 = '0', Str4 = ' ', Str5 = Lenlog, Str6 = ' ', Str7 = AtomicList,
 
-                                                        atom_concat(Str1, Str2, W1), 
+                                                        atom_concat(Str0, Str00, W0),
+                                                        atom_concat(W0, Str1, W00),
+                                                        atom_concat(W00, Str2, W1), 
                                                         atom_concat(W1, Str3, W2),
                                                         atom_concat(W2, Str4, W3),
                                                         atom_concat(W3, Str5, W4),
                                                         atom_concat(W4, Str6, W5),
                                                         atom_concat(W5, Str7, W6),
                                                         
-                                                        send_log(_, W6)
+                                                        write(X, W6),
+                                                        write(X, '\n'),
+                                                        close(X)
                                 )
                         )
         ),
@@ -1892,11 +1790,8 @@ timer_release(ID, N):-
 
         mutex_unlock(GPOSTT),
         sleep(5),
-
         mutex_unlock(GPOST),
         sleep(5),
-
-        take_in_buffer,
 
         N1 is N + 1,
         timer_release(ID, N1),
