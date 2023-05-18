@@ -4,13 +4,13 @@ import os
 os.system('start cmd /k "swipl -s log.pl -g set_log"')
 
 # Define the prefix for the Prolog file names
-prefix = 'myclone50_'
+prefix = 'line_myclone50_'
 
 # Get the list of Prolog files in the current working directory
 prolog_files = [f for f in os.listdir() if f.startswith(prefix)]
 
 # Sort the list of Prolog files by their number (assuming they have a format of "myclone20_N.pl")
-prolog_files = sorted(prolog_files, key=lambda f: int(f.split("_")[1].split(".")[0]))
+prolog_files = sorted(prolog_files, key=lambda f: int(int(f[-5]) * 10 + int(f[-4])))
 
 # Spawn a command prompt for each Prolog file in order
 for f in prolog_files:
