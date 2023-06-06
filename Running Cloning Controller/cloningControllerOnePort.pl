@@ -42,7 +42,7 @@ clone_lifetime(10).
 clone_resource(10).
 
 :-dynamic queue_threshold/1.
-queue_threshold(1).
+queue_threshold(5).
 
 :-dynamic q_monitor_steptime/1.
 q_monitor_steptime(1003).
@@ -66,7 +66,7 @@ tau_c(0.1).
 tau_r(5).
 
 :-dynamic sigma/1.
-sigma(1.5).
+sigma(7).
 
 :-dynamic child/1.
 child('C').
@@ -388,7 +388,7 @@ cloning_pressure(Ps):- writeln('cloning_pressure Failed'),!.
 :-dynamic deduct_clonal_resource/2.
 deduct_clonal_resource(GUID,NC):-
 
-        clone_resource(Rmin),
+        agent_min_resource(Rmin),
         agent_resource(GUID,Rav),
         
         Rav_next is Rav - (NC*Rmin),
@@ -1717,7 +1717,7 @@ timer_release(ID, N):-
                         ;
                         (
                                 (
-                                        (N =:= 150)->
+                                        (N =:= 300)->
                                                 (
                                                         halt
                                                 )
@@ -1763,9 +1763,18 @@ timer_release(ID, N):-
                 
                 need_train(Need_Train),
                 
+                (N =< 150 ->  
+                			( (N >= 1, N =< 50) -> decide_H(1, H)
+                                                               %H = 1
+                                                                ; nothing),
+                			( (N >= 51, N =< 100) -> decide_H(2, H)
+                                                                %H = 2
+                                                                ; nothing),
+                			( (N >= 101, N =< 150) -> decide_H(3, H) 
+                                                                %H = 3 
+                                                                ; nothing)
                 
-                
-                random_member(H, Need_Train), % modify this later, just to check explosion of PerAgentPopulation
+                ; random_member(H, Need_Train)), % modify this later, just to check explosion of PerAgentPopulation
 
                 writeln('***************************************************************************'),
                 writeln('Platform NEEDS the service of Agent ':H),
