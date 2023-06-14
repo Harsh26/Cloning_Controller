@@ -25,9 +25,13 @@ Bonus:
 In Case of doubts please contact undersigned details.
 
 Author: Harsh Bijwe
+
 Institute: IIT Guwahati
+
 Company placed: CDoT, C-DOT Campus, Mehrauli, New Delhi - 110030.
+
 Email: harshbjw26@gmail.com
+
 Phone/WhatsApp: 8234074223
 
 
