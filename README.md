@@ -1,9 +1,6 @@
 # Cloning_Controller
 Controls the clone an agent can produce
 
-Author: Harsh Bijwe
-
-Institute: IIT Guwahati
 
 Please go through the paper thoroughly to understand the working of the code. The paper can be found at: https://link.springer.com/chapter/10.1007/978-3-662-44509-9_3
 
@@ -23,3 +20,14 @@ Bonus:
   3. Structure of server_log.txt after "--->" is Iteration_number | Satisfied/Not-Satisfied | Number of Agents | Per Agent Population. 
   4. Various Graphs for various cases as per their nomenclature can be found inside Graph folder.
   5. Separate code for PherCon Approach can be found in Pher_Con Folder. Please Note, cloning controller code does NOT take input from this folder. All code related to pheromones for Cloning Controller was copied and pasted in the same file (cloningControllerOnePort.pl). So both are not dependent on each other. I made it separate so that it can be utilized for other works. 
+
+
+In Case of doubts please contact undersigned details.
+
+Author: Harsh Bijwe
+Institute: IIT Guwahati
+Company placed: CDoT, C-DOT Campus, Mehrauli, New Delhi - 110030.
+Email: harshbjw26@gmail.com
+Phone/WhatsApp: 8234074223
+
+
