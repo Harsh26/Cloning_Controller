@@ -1,6 +1,6 @@
-% Title: RAW version - Cloning Controller for Tartarus
-% Author: Tushar Semwal 
-% Date: 26-Oct-15
+% Title: FInal version - Cloning Controller for Tartarus
+% Author: Tushar Semwal + Harsh Bijwe
+% Date: 18-05-2023
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                   Declarations                                         %
@@ -19,15 +19,16 @@
 :-dynamic agent_resource/2.
 :-dynamic agent_type/2.
 
-:-dynamic need/1.                       % need = -1 means It will not require any need, now or in future. need = -2 means
-                                        % it wont require anything now but will require in future. need = -3 means need
-                                        % has already been satisfied. 
+:-dynamic need/1.    % need = -1 means that node will not require any type of service ever
+                     % need = 0 means that node will require service but it is not satisfied yet
+                     % need = 1 means that node will require service and it is satisfied                  
 
-:-dynamic agent_inherit/2.
-:-dynamic agent_visit/2.
+:-dynamic agent_inherit/2. % agent_inherit = 'P' means that the agent is a parent agent
+                           % agent_inherit = 'C' means that the agent is a child agent
+:-dynamic agent_visit/2.   
 
 :-dynamic intranode_queue/1.
-intranode_queue([]).
+intranode_queue([]). % All transcations happens via the queue only..
 
 :-dynamic ack_q/1.
 ack_q([]).
@@ -35,32 +36,19 @@ ack_q([]).
 :-dynamic transit_req/1.
 transit_req(0).
 
-:-dynamic clone_lifetime/1.
+:-dynamic clone_lifetime/1. % Lifetime of the clone
 clone_lifetime(10).
 
-:-dynamic clone_resource/1.
+:-dynamic clone_resource/1. % Resource of the clone
 clone_resource(10).
 
 :-dynamic queue_threshold/1.
-queue_threshold(5).
+queue_threshold(5).     % Threshold or Max size of the intranode queue
 
-:-dynamic q_monitor_steptime/1.
-q_monitor_steptime(1003).
 
-:-dynamic ack_q_timeout/1.
-ack_q_timeout(4).
-
-:-dynamic transit_req_timeout/1.
-transit_req_timeout(8).
-
-:-dynamic lifetime_decrement/1.
-lifetime_decrement(1).
-
-:-dynamic service_reward/1.
-service_reward(1).
 
 :-dynamic tau_c/1.
-tau_c(0.1).
+tau_c(0.1).             
 
 :-dynamic tau_r/1.
 tau_r(5).
@@ -72,13 +60,13 @@ sigma(7).
 child('C').
 
 :-dynamic agent_max_resource/1.
-agent_max_resource(100).
+agent_max_resource(100).        % Maximum resource that an agent can have
 
 :-dynamic agent_min_resource/1.
-agent_min_resource(10).
+agent_min_resource(10).         % Minimum resource that an agent can have
 
 :-dynamic type_of_agents/1.
-type_of_agents(3).
+type_of_agents(3).              % Number of types of agents, has to be set by user.
 
 :-dynamic global_mutex/1.
 :-dynamic posted_lock/1.
@@ -94,31 +82,37 @@ type_of_agents(3).
 start_clonning_controller(P):-
 
                 mutex_create(GMID),
-                assert(global_mutex(GMID)),
+                assert(global_mutex(GMID)), % Lock for internal operations, may not be required, just to ensure
+                                            % no operation happens without taking a lock.
 
                 
-                mutex_create(GPOST),
-                assert(posted_lock(GPOST)),
+                mutex_create(GPOST),        % Lock for enqueuing the Agent. Ensures that no enqueue operation happens
+                assert(posted_lock(GPOST)), % when platform is executing the Algorithm in the paper. After the 
+                                            % algorithm is executed, the lock is released and the enqueue of agents can take place.
                 
-                
-                mutex_create(GPOSTT),
-                assert(posted_lock_dq(GPOSTT)),
+                mutex_create(GPOSTT),           % Lock for dequeueing the Agent. Ensures that no dequeue operation happens
+                assert(posted_lock_dq(GPOSTT)), % when platform is executing the Algorithm in the paper. After the 
+                                                % algorithm is executed, the lock is released and the dequeue of agents can take place.
 
-                set_log_server(localhost, 6666),
+                set_log_server(localhost, 6666), % setting up the Log server. Will result in error as per the Tartarus implementaion
+                                                 % if not setup before running the code. It is already taken care of when we use spawn.py to execute.  
 
-                q_manager(P),
-                dq_manager(P),
+                q_manager(P),   % All enqueue related predicates are called in here.
+                dq_manager(P),  % All dequeue related predicates are called in here.
 
-                thread_create(timer_release(ID, 1),ID,[detached(false)]),
+                thread_create(timer_release(ID, 1),ID,[detached(false)]), % Cloning Controller runs as a seprate thread. 
+
                 !.
 
 
 start_queue_manager(P):- write('start_queue_manager Failed'),!.
 
+% Initializes the need of the node.
 init_need(N):-
         retractall(need(_)),
         assert(need(N)),
         !.
+
 
 q_manager(P):-
               write('=====Q-Manager====='),
@@ -127,14 +121,14 @@ q_manager(P):-
 q_manager(P):- write('q_manager failed'),!.
 
 
+% Main predicate of enqueue operation. 
 :- dynamic q_manager_handle_thread/3.
-
 q_manager_handle_thread(ID,(IP,NP),X, Tokens):-
                 
                 writeln('Atleast till qmht'),
 
-                posted_lock(GPOST),
-                mutex_lock(GPOST),
+                posted_lock(GPOST), 
+                mutex_lock(GPOST),      % Acquire the required lock..
 
                 writeln('Request received for the arrival of agent':X),
                 writeln('Arrival of agent from Port ':NP),
@@ -153,33 +147,36 @@ q_manager_handle_thread(ID,(IP,NP),X, Tokens):-
                 
                 platform_port(QP),
                 
-                L is Q_Len + B_Len, 
+                L is Q_Len + B_Len, % Combined length of the queue and the bufferin list will result in decision whether to send ACK or NAK.
                 writeln(Len), writeln(Q_Len), writeln(ACK_Len), writeln(L), platform_token(Ptoken),
                 (
                         (L<Len, member(Ptoken, Tokens))->
                         (                       
-                                ack_q(Ack_Q),
-                                append([X],Ack_Q,Nw_Ack_Q),
-                                agent_post(platform,(IP,NP),[dq_manager_handle,_,(localhost,QP),ack(X)]),
+                                ack_q(Ack_Q),               % Just to keep track of ACK, no important use of Ack_Q.
+                                append([X],Ack_Q,Nw_Ack_Q), % Just to keep track of ACK, no important use of Ack_Q.
+
+                                agent_post(platform,(IP,NP),[dq_manager_handle,_,(localhost,QP),ack(X)]), % Give back ACK to the sender.
                                 writeln('Space is available in the queue. ACK sent.'),
                                 %writeln('Ack Queue':Nw_Ack_Q),
                                 update_ack_queue(Nw_Ack_Q),
-                                movedagent(_,(localhost, NP), X)
+                                movedagent(_,(localhost, NP), X) % Add the agent to the buffer initially.
                         )
                         ;
                         (
-                                agent_post(platform,(IP,NP),[dq_manager_handle,_,(localhost,QP),nack(X)]),
+                                agent_post(platform,(IP,NP),[dq_manager_handle,_,(localhost,QP),nack(X)]), % Give back NAK to the sender.
                                 writeln('No space is available in queue or Tokens do not match. NAK sent...')
                         )
                 ),
 
-                mutex_unlock(GPOST),
+                mutex_unlock(GPOST), % release the Acquired lock.
                 !.
 
 q_manager_handle_thread(ID,(IP,NP),X, _):-
                 writeln('Q_maanger_handle_thread failed !!'), !.
 
 :- dynamic q_manager_handle_thread_id/1.
+
+% Predicate to reuse the old thread. Avoids creating new thread for each incoming requests foe enqueue. 
 :-dynamic call_count/1.
 call_count(0).
 
@@ -191,6 +188,8 @@ q_manager_handle(_,(IP,NP),recv_agent(X, Token)):-
 
                 (Cnt =:= 0 -> 
                         (
+                                % The initial call of entering the agent has no thread running so create one !!..
+
                                 writeln('Atleast till q_manager_handle'),
                                 retractall(call_count(_)),
                                 assert(call_count(1)),
@@ -206,10 +205,14 @@ q_manager_handle(_,(IP,NP),recv_agent(X, Token)):-
                                 thread_property(ThreadID, status(Status)),
                                 (
                                         Status == running -> 
+                                                % If old thread is running then use it to handle the request.
+
                                                 writeln('Using older thread...'),
                                                 q_manager_handle_thread_id(OldID),
                                                 thread_send_message(OldID, q_manager_handle_thread(OldID, (IP, NP), X, Token)) 
                                                 ;
+                                                % Else create a new thread and use it to handle the request.
+
                                                 retract(q_manager_handle_thread_id(ThreadID)),
                                                 thread_create(q_manager_handle_thread(NewID, (IP, NP), X, Token),NewID,[detached(false)]),
                                                 assert(q_manager_handle_thread_id(NewID))
@@ -227,6 +230,7 @@ q_manager_handle(guid,(IP,P),recv_agent(X, _)):- write('Q-manager handler failed
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%===Inserting into own queue===%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% Enqueues the agent to rear of the intranode queue..
 :- dynamic migrate_typhlet/1.
 migrate_typhlet(GUID):-
                 writeln('\n'),
@@ -278,6 +282,7 @@ update_ack_queue(X):-
 update_ack_queue(X):- write('update_ack_queue Failed'),!.
 
 
+% Just some print stmts..
 :- dynamic initiate_migration/1.
 initiate_migration(GUID, NP):-
                 
@@ -301,7 +306,7 @@ initiate_migration(GUID, NP):-
 
 initiate_migration(GUID):- writeln('initiate_migration Failed'),!.
 
-% Assigns the clone same type as that of parent.
+% Assigns the clone same type as that of parent. And inherit type as 'C' for clone.
 :-dynamic assign_type/2.
 assign_type(G, X):-
                 %writeln('chk this four ':G),
@@ -354,7 +359,6 @@ clone_if_necessary(GUID):-
 clone_if_necessary(GUID):- writeln('clone_if_necessary/1 Failed'),!.
 
 % no_of_clone/2 gives the no of clones that will be created for the agent GUID.
-
 :-dynamic no_of_clone/2.
 no_of_clone(GUID,N):-
 
@@ -414,7 +418,6 @@ deduct_clonal_resource(GUID,NC):- write('deduct_clonal_resource Failed'),!.
 :-dynamic create_clones/2.
 
 create_clones(GUID,0):- nl, writeln('Cloning Commencing>>>>>'),!.
-
 create_clones(GUID,N):-
 
                 Nx is N-1,
@@ -471,6 +474,7 @@ set_clone_parameter(GUID):-
 set_clone_parameter(GUID):- write('set_clone_parameter Failed'),!.
 
 
+% For now rewards are useless, but can be used in future.
 :-dynamic give_reward/2.
 give_reward(GUID, X):-
                 retractall(my_service_reward(GUID,_)),
@@ -478,8 +482,8 @@ give_reward(GUID, X):-
 
 give_reward(GUID, X):- write('Give Rewards Failed!!'), !.
 
-% set_resource/2 sets the resouce of the clone/agent.
 
+% set_resource/2 sets the resouce of the clone/agent.
 :-dynamic set_resource/2.
 set_resource(GUID,X):-
                 retractall(agent_resource(GUID,_)),
@@ -491,11 +495,8 @@ set_resource(GUID,X):- write('set_resource Failed'),!.
 
 %% get_sublist/3 gives a sublist till a position given as input for the list.
 :-dynamic get_sublist/3.
-
 get_sublist(Pos,List,List):- length(List,L),L=<Pos,!.
-
 get_sublist(0,_,[]).
-
 get_sublist(Pos,[H|T],[H|Tnew]):-
                         Pos1 is Pos -1,
                         %nl,write(Pos1),
@@ -509,6 +510,7 @@ get_sublist(Pos,List,List2):- write('get_sublist Failed'),!.
 
 % Harsh added...
 
+% Adding agent to buffer..
 :-dynamic movedagent/3.
 movedagent(_,(IP,NP), X):-    	
 
@@ -518,7 +520,7 @@ movedagent(_,(IP,NP), X):-
         platform_port(Thisport),
 
         writeln('This executed..'),
-        assert(bufferin(X)),
+        assert(bufferin(X)), % Add the agent to the buffer. 
         %intranode_queue(I),
         writeln('This also executed..'),
         
@@ -533,6 +535,7 @@ movedagent(_,(IP,NP), X):-
                 
 moveagent(_,(IP,P),recv_agent(X)):- writeln('moveagent in cloning controller failed!!'),!.
 
+% Update the lifetime of agent, with help of sigma based on the equations of the paper.
 :- dynamic update_lifetime/1.
 update_lifetime(GUID):-
         sigma(S),
@@ -547,7 +550,7 @@ update_lifetime(GUID):-
 update_lifetime(GUID):- writeln('Update lifetime failed!!'),!.
 
         
-
+% Update the resource of agent, with help of tau_r and tau_c based on the equations of the paper.
 :- dynamic update_resource/1.
 update_resource(GUID):-
         %writeln('here'),
@@ -625,11 +628,9 @@ update_resource(GUID):- writeln('Update resource Failed!!'), !.
 empty_queue([]).
 
 enqueue(E, [], [E]).
-
 enqueue(E, [H | T], [H | Tnew]) :-enqueue(E, T, Tnew).
 
 dequeue(E, [E | T], T).
-
 dequeue(E, [E | _], _).
 
 
@@ -648,7 +649,6 @@ add_list_to_queue(List, Queue, Newqueue) :-append(Queue, List, Newqueue).
 %                       migrates the agent to the next node.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% DQ-Manager : This agent takes care of transfering an agent to the next node.
 :- dynamic dq_manager/1.
 dq_manager(P):-
                 write('=========== DQ-MANAGER =========='),
@@ -658,13 +658,11 @@ dq_manager(P):- writeln('dq_manager Failed'),!.
 
 % DQ-Manager handler to handle request and response to transfer an agent
 % at the top of the intranode queue onto the next node.
-
-
 :-dynamic dq_manager_thread_ack/3.
 dq_manager_thread_ack(ID, (IP, P), X):-
 
                 posted_lock_dq(GPOSTT),
-                mutex_lock(GPOSTT),
+                mutex_lock(GPOSTT),     % Acquire the required lock..
 
                 agent_list_new(Aglist),
                 (member(X, Aglist)->
@@ -676,21 +674,20 @@ dq_manager_thread_ack(ID, (IP, P), X):-
 
                         nothing
                 ),
-
-                
         
-                mutex_unlock(GPOSTT),
+                mutex_unlock(GPOSTT), % Release the Acquired lock..
                 !.
 
 dq_manager_thread_ack(ID, (IP, P), X):-
                 writeln('Dq_manager_thread_ack failed !!'), !.
 
 
+% If NAK is recieved from the destination..
 :-dynamic dq_manager_thread_nak/3.
 dq_manager_thread_nak(ID, (IP, P), X):-
 
                 posted_lock_dq(GPOSTT),
-                mutex_lock(GPOSTT),
+                mutex_lock(GPOSTT),    % Acquire the required lock..
                 
                 intranode_queue(I),
                 length(I, Len),
@@ -699,7 +696,7 @@ dq_manager_thread_nak(ID, (IP, P), X):-
                         intranode_queue([H|T]), agent_list_new(Aglist),
                         ((member(X, Aglist), H = X)->
                                 writeln('Migration Denied (NAK) by the receiver'),
-                                migrate_typhlet(X)
+                                migrate_typhlet(X) % Add the agent back to the queue..
                                 ;
                                 nothing
                         )
@@ -707,7 +704,7 @@ dq_manager_thread_nak(ID, (IP, P), X):-
                         nothing
                 ),
                 
-                mutex_unlock(GPOSTT),
+                mutex_unlock(GPOSTT), % Release the Acquired lock..
 
                 !.
 
@@ -715,8 +712,8 @@ dq_manager_thread_nak(ID, (IP, P), X):-
                 writeln('Dq_manager_thread_nak failed !!'), !.
 
 
+% Create respective thread for the response.
 :- dynamic dq_manager_handle/3.
-% To tranfer an agent to the destination after an ACK is received.
 dq_manager_handle(_,(IP,P),ack(X)):- 
 
                 writeln('Arrived dq_manager_handle_ack atleast'),
@@ -735,9 +732,8 @@ dq_manager_handle(_,(IP,P),nack(X)):-
 dq_manager_handle(_,(IP,P),nack(X)):- writeln('dq_manager_handle NAK Failed'),!.
 
 
-
-:-dynamic dq_manager_handler/3.
 % To release agent from the intranode queue.
+:-dynamic dq_manager_handler/3.
 dq_manager_handler(_,(IP,NP),Agent):-
 
                 agent_list_new(Aglist),
@@ -759,11 +755,11 @@ dq_manager_handler(_,(IP,NP),Agent):-
                         give_reward(Agent, Snew),
                         
                         agent_visit(Agent, Vis),
-                        enqueue(PP, Vis, Visnew),
+                        enqueue(PP, Vis, Visnew), % Update vis that the agent carries.
 
                         retractall(agent_visit(Agent, _)), assert(agent_visit(Agent, Visnew)),
 
-                        move_agent(Agent,(localhost,NP)),
+                        move_agent(Agent,(localhost,NP)), % Actually the agent moves.
 
                         dequeue(Agent,Ihere,In),
 
@@ -779,7 +775,6 @@ dq_manager_handler(_,(IP,NP),Agent):-
         writeln('Dq_manager_handler failed !!'), !.
 
 %leave_queue/3 contacts the destination of the agent whether it can move there or not.
-
 :- dynamic leave_queue/3.
 leave_queue(Agent,NIP,NPort):-
                 
@@ -797,10 +792,11 @@ leave_queue(Agent,NIP,NPort):-
                 mutex_unlock(GMID),
 
                 !.
-
 leave_queue(Agent,IP,Port):- writeln('leave_queue Failed'),!.
 
 
+% Find out the node where maximum concentration of pheromone of the required type is present, out of neighbours
+% and move our Next_Node will be that node.
 :-dynamic pher/2.
 pher(H, NP):-
         find_highest_concentration_pheromone(H, PherName, NxtNode), writeln('Nxt Node ':NxtNode),
@@ -810,7 +806,7 @@ pher(_, _):-
         writeln('Pher predicate failed !!'),
         !.
 
-
+% If no pheromone is present, then move to a random neighbour which is not recently visited.
 :-dynamic cons/2.
 cons(H, NP):-
         nn_minus_vis(H, Nxtnode), writeln('Nxt node ':Nxtnode),
@@ -822,6 +818,8 @@ cons(_, _):-
 
 delete_first([_|T], T).
 
+
+% Define a predicate to decide whether to follow pheromone trail or go for conscientious movement.
 :-dynamic phercon_decider/2.
 phercon_decider(Agent, Decider):-
         
@@ -872,7 +870,7 @@ find_highest_concentration_pheromone(Agent, PheromoneName, Nxt) :-
         nth0(MaxIdx, Pheromones, [PheromoneName, _, _, Nxt, _, _, _]).
 
 
-
+% Subtracts the set of Node neighbours with Vis list of agent, if resultant sets length = 0 then randomly go to any neighbour 
 nn_minus_vis(Agent, NxtNode):-
         node_neighbours(NN),
         agent_visit(Agent, Vis),
@@ -887,6 +885,7 @@ nn_minus_vis(Agent, NxtNode):-
 
         (Len = 0 -> random_member(NxtNode, NN) ; random_member(NxtNode, Result)).
 
+% Return the Next node to which the agent should move.
 :-dynamic phercon_neighbour/1.
 phercon_neighbour(NP):-
         
@@ -921,13 +920,11 @@ phercon_neighbour(_):-
         wrietln('Phercon neighbour failed !!'),
         !.
 
-
-
-
+% Algorithm that paper follows.. 
 :- dynamic release_agent/0.
 release_agent:-
                         global_mutex(GMID),
-                        mutex_lock(GMID),
+                        mutex_lock(GMID), % Not that necessary to put this lock, just to ensure completeness.
                                                 
                         writeln('Release Agent called...'),
                         need(N),
@@ -944,7 +941,8 @@ release_agent:-
                                         (
                                                 node_neighbours([H | T]), % Shuffling..
                                                 %NP is H,
-                                                phercon_neighbour(NP),
+
+                                                phercon_neighbour(NP), % Based on PherCon Approach decide the next node to move to.. Given by NP.
                                                 writeln('Decided NP ':NP),
 
 
@@ -1026,13 +1024,11 @@ release_agent:-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%|| Q-manager Utilities ||%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%                                                                         %%%%%%%%%%%%%%%%%%%%%%%
 
+% Show or write the lifetimes of all agents present in queue to console.
 :-dynamic show_lf/1.
-
 show_lf([]).
-
 show_lf([H|T]):-
-        %process(H),
-
+        
         agent_lifetime(H, L),
         agent_type(H, Typ),
         write('Agent ':H),
@@ -1045,8 +1041,6 @@ show_lf([H|T]):-
         !.
 
 showlifetime:-
-        
-
         intranode_queue(I),
         show_lf(I),
         !.
@@ -1054,10 +1048,9 @@ showlifetime:-
 :-dynamic tmp_q/1.
 tmp_q([]).
 
+% Delete the agents whose lifetime is zero.
 :-dynamic del_zero_lifetime/1.
-
 del_zero_lifetime([]).
-
 del_zero_lifetime([H|T]):-
         agent_lifetime(H, L),
         tmp_q(Q),
@@ -1077,10 +1070,9 @@ del_zero_lifetime([H|T]):-
 
         !.
 
+% Decrement lifetimes of each agent in the intranode queue.
 :-dynamic do_decr/1.
-
 do_decr([]).
-
 do_decr([H|T]):-
         
         %writeln('do_decr_start'),
@@ -1099,23 +1091,14 @@ do_decr([H|T]):-
         !.
         
 
+% Consolidate predicates to decrement lifetime of agents cum delete agents with zero lifetime.
+% I know a bit complex for a very easy task. But thats how it is.
 :- dynamic decrement_lifetime/0.
-
 decrement_lifetime:-
 
         intranode_queue(I),
-        %agent_list_new(Aglist),
-        %writeln('Aglist ': Aglist),
-        %tmp_q(Q),
-        %writeln('Q here ' :Q),
-        %update_intranode_queue(Q),
-        %retractall(tmp_q(_)),
-        %assert(tmp_q([])),
-        %writeln('Decrement lifetime of ': I),
         do_decr(I),
         intranode_queue(Ii),
-        %writeln('Decrement cycle Done ! now lifetimes ':Ii),
-
         del_zero_lifetime(Ii),
         
         writeln('Ii here ' :Ii),
@@ -1135,8 +1118,8 @@ decrement_lifetime:-
         writeln('Agents truly here ':Res),
         !.
 
+% Check if need is satisfied or not. By going through the agents in intranode queue.
 :-dynamic need_a_member/2.
-
 need_a_member(Need, []).
 need_a_member(Need, [H|T]) :- 
         
@@ -1153,8 +1136,8 @@ need_a_member(Need, [H|T]) :-
         
         !.
 
+% See if the need of platform is satisfied or not by calling need_a_member predicate.
 :-dynamic see_if_satisfy/1.
-
 see_if_satisfy(Needsat):-
 
         writeln('See if satisfy called..':Needsat),
@@ -1199,14 +1182,14 @@ cmax(1000).
 lmax(20).                                                               % Max Lifetime..
 
 :-dynamic pheromones_db/1.
-pheromones_db([]).                                                      % All pheromones at this Node..
+pheromones_db([]).                                                      % Database of All pheromones at this Node..
 
 
 :-dynamic pheromone_now/1.                                              % Pheromone present Now..
-:-dynamic pheromone_time/1.
+:-dynamic pheromone_time/1.                                             % When Time reaches TimeOut, re-emit the pheromones..
 
 :-dynamic pheromone_timeout/1.
-pheromone_timeout(20).
+pheromone_timeout(20).                                                  % Timeout for pheromone..
 
 
 % Define a predicate to insert a pheromone into the list
@@ -1250,6 +1233,7 @@ insert_pheromone(_,_,_):-
 % Define a predicate to update the list
 update_list([Name, Power, Lifetime, X, Y, I, J], [Name, Power, Lifetime, X, [NewValue|Y], I, J], NewValue).
 
+% Predicate to add the pheromone to the list..
 :-dynamic add_me_thread/2.
 add_me_thread(_, X):-
 
@@ -1275,10 +1259,11 @@ add_me_thread(_, X):-
     !.
 
 add_me_thread(_, _):-
-    writeln('add_me_thread failed !!'),
+    writeln('add_me_thread pheromone lifetime zero, or moved..!!'),
     !.
 
 
+% Calls the predicate which adds the pheromone to DB..
 :-dynamic add_me/2.
 add_me(_,add(X)):-
 
@@ -1291,8 +1276,8 @@ add_me(_,_):-
     writeln('Add me failed !!'),
     !.
 
-
-:-dynamic release_pheromones_to_nodes_init/2.                           % Release Pheromones to neighbours
+% Release Pheromones to neighbours..
+:-dynamic release_pheromones_to_nodes_init/2.                           
 release_pheromones_to_nodes_init([], _, _).
 
 release_pheromones_to_nodes_init([NP|Rest], Need, N):-                              
@@ -1305,7 +1290,7 @@ release_pheromones_to_nodes_init([NP|Rest], Need, N):-
     Name1 = 'Pheromone',
     atom_concat(Name1, Pnum, Name2),
     atom_concat(Name2, '_', Name3),
-    atom_concat(Name3, N, ID),
+    atom_concat(Name3, N, ID), % ID of the pheromone, which will always be unique..
     
     retractall(pheromone_now(_)),
     assert(pheromone_now(ID)),
@@ -1334,10 +1319,9 @@ delete_me(ListToRemove, ListOfLists, NewListOfLists) :-
     delete(ListOfLists, ListToRemove, NewListOfLists).
 
 
+% Deletes pheromone with the specified name or ID.. 
 :-dynamic delete_pheromone_request/2.
-
 delete_pheromone_request([],_).
-
 delete_pheromone_request([H|T],X):-
         
         %writeln('delete_pheromone_chk1..'),
@@ -1363,6 +1347,7 @@ delete_pheromone_request([_],_):-
         writeln('Delete pheromone request Failed !!'),
         !.
 
+% Whisper is the predicate that calls the delete pheromone predicate..
 :- dynamic whisperer_handle_thread/3.
 whisperer_handle_thread(X):-
         
@@ -1390,10 +1375,9 @@ whisperer(_,deletepherom(_)):-
         writeln('Whisperer Failed!!'),
         !.
 
+% Recursively tell all the neighbour nodes about pheromone to be deleted..
 :-dynamic tell_all_other_nodes/2.
-
 tell_all_other_nodes([], _).
-
 tell_all_other_nodes([Node|Nodes], PHnow):-
         
         writeln('Tell other nodes start..'),
@@ -1445,6 +1429,7 @@ remove_expired_pheromones(_,_):-
     writeln('Remove expired pheromones failed !!'),
     !.
 
+% Recursively call each neighbour for diffusing pheromones..
 add_to_each_neighbour([], _).
 add_to_each_neighbour([NP|Nodes], X):-
     agent_post(platform,(localhost,NP),[add_me,_,add(X)]),
@@ -1456,6 +1441,7 @@ add_to_each_neighbour(_,_):-
     !.
 
 
+% Number of neighbours that have not been visited by the pheromone..
 :-dynamic get_number/3.
 get_number(Vis, NN, Res) :-
         %NN = [2,3,4,5],
@@ -1496,6 +1482,7 @@ keys([K-_|KVs], [K|Keys]) :-
     keys(KVs, Keys).
 
 
+% For transferring pheromones of other nodes to this nodes neighbours..
 transfer_pheromones_util([]).
 transfer_pheromones_util([H|T]):-
     
@@ -1548,6 +1535,7 @@ transfer_pheromones(_):-
     writeln('Transfer Pheromones failed !!'),
     !.
 
+% Decrements lifetime of pheromones and removes expired pheromones..
 :-dynamic decrement_lifetime_pheromones/0.
 decrement_lifetime_pheromones:-
 
@@ -1587,8 +1575,8 @@ pheromones_transfer:-
 % -------------------------- Pheromone Predicates End ----------------------------------------
 
 
+% Just a normal check to find if any transferred agent still residing in the queue, If yes delete that element, else do nothing
 :-dynamic sanitize/3.
-
 sanitize(Aglist, I, Result):-
         % find the intersection of I and Aglist
         intersection(I, Aglist, Intersection),
@@ -1625,6 +1613,7 @@ get_agent_types(AgentTypes) :-
     intranode_queue(Agents),
     bagof(Type, Agent^(member(Agent, Agents), agent_type(Agent, Type)), AgentTypes).
 
+% For finding the Per Agent Population..
 give_data(PerAgentPopulation):-
         intranode_queue(I),
         length(I, Len),
@@ -1651,8 +1640,8 @@ pair_to_atom(Key-Value, Atom) :-
     atomic_list_concat([Key, Value], '-', Atom).
 
 
+% Pour Buffer elements to the intranode queue, make sure to take appropriate locks..
 :-dynamic take_in_buffer/0.
-
 take_in_buffer:-
         posted_lock(GPOST),
         mutex_lock(GPOST),
@@ -1694,6 +1683,7 @@ assertz_to_queue(_,_):-
         writeln('Assertz to queue failed !!'),
         !.
 
+% Ignore this.. just for Plotting the Graph of Worst case.. 
 decide_H(Num, H):-
 	
 	platform_number(PNR),
@@ -1734,10 +1724,10 @@ timer_release(ID, N):-
         
         
         posted_lock(GPOST),
-        posted_lock_dq(GPOSTT),
+        posted_lock_dq(GPOSTT), % Acquire lock for dequeue..
 
         mutex_lock(GPOST),
-        mutex_lock(GPOSTT),
+        mutex_lock(GPOSTT),     % Acquire lock for enqueue..
 
         writeln('Thread ID ':ID),
 
@@ -1752,29 +1742,13 @@ timer_release(ID, N):-
         write('In the beginning of iteration after sanitization, list is '),
         writeln(Rsan),
         
-        satisfied_need(SN), 
-        
-        %need(TmpNeed), % remove later
-        %((N =< 150, TmpNeed \== -1) -> retractall(need(_)), assert(need(0)) ; nothing), % remove later, just to check explosion of PerAgentPopulation
-        
+        satisfied_need(SN),
         need(Need),
 
         ((Need =:= 0 ; SN =:= 1)->(
                 
                 need_train(Need_Train),
-                
-                (N =< 150 ->  
-                			( (N >= 1, N =< 50) -> decide_H(1, H)
-                                                               %H = 1
-                                                                ; nothing),
-                			( (N >= 51, N =< 100) -> decide_H(2, H)
-                                                                %H = 2
-                                                                ; nothing),
-                			( (N >= 101, N =< 150) -> decide_H(3, H) 
-                                                                %H = 3 
-                                                                ; nothing)
-                
-                ; random_member(H, Need_Train)), % modify this later, just to check explosion of PerAgentPopulation
+                random_member(H, Need_Train), 
 
                 writeln('***************************************************************************'),
                 writeln('Platform NEEDS the service of Agent ':H),
@@ -1789,13 +1763,14 @@ timer_release(ID, N):-
         );(nothing)),
         
         need(Needsat),
-
         (Needsat \== -1 -> see_if_satisfy(Needsat) ; nothing),
         
         satisfied_need(SAN),
         (
                 (SAN =:= 1)->
                         (
+                                % If platforms need is satisfied, tell all other nodes to delete the Pheromone with respective ID..
+                                % Give data to log server about the satisfaction..  
                                 intranode_queue(Ilog),
                                 length(Ilog,Lenlog),
 
@@ -1832,8 +1807,13 @@ timer_release(ID, N):-
                                 need(Pheromone),
                                 (
                                         Pheromone =:= -1 -> 
+                                                        % If this platform cannot generate Need dont do anything
                                                         nothing
                                                         ;
+
+                                                        % If need of platform Not satisfied,
+                                                        % Release pheromones to neighbours, and give data to log server..
+                                                        % If timeout occurs then call delete predicates for pheromone and start releasing pheromones again..
 
                                                         intranode_queue(Ilog),
                                                         length(Ilog,Lenlog),
@@ -1881,8 +1861,8 @@ timer_release(ID, N):-
                         )
         ),
 
-        decrement_lifetime_pheromones,
-        pheromones_transfer,
+        decrement_lifetime_pheromones,  % Decrement lifetime of pheromone, and remove expired pheromones..
+        pheromones_transfer,            % Transfer pheromones of other nodes to neighbours of this node..
     
         % find out neighbour, eliminate neighbours[] used in the code.. It will also contain pher/con move, 
         % this predicate lies inside release_agent
